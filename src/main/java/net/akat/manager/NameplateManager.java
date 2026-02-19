@@ -1,0 +1,260 @@
+package net.akat.manager;
+
+import net.akat.NameplateItem;
+import net.luckperms.api.LuckPerms;
+import net.luckperms.api.model.user.User;
+import org.bukkit.Material;
+import org.bukkit.configuration.ConfigurationSection;
+import org.bukkit.configuration.file.FileConfiguration;
+import org.bukkit.configuration.file.YamlConfiguration;
+import org.bukkit.entity.Player;
+import org.bukkit.plugin.java.JavaPlugin;
+
+import java.io.File;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.List;
+import java.util.logging.Level;
+import java.util.stream.Collectors;
+
+public class NameplateManager {
+    private final JavaPlugin plugin;
+    private File configFile;
+    private FileConfiguration config;
+    private final Map<String, NameplateItem> nameplates = new HashMap<>();
+    private final Map<String, PackItem> packs = new HashMap<>(); // Новое поле для пакетов
+    private String menuTitle;
+    private int menuRows;
+
+    // Класс для хранения информации о пакете
+    public static class PackItem {
+        private final String name;
+        private final Material material;
+        private final List<String> lore;
+        private final int slot;
+        private final List<NameplateItem> items;
+
+        public PackItem(String name, Material material, List<String> lore, int slot) {
+            this.name = name;
+            this.material = material;
+            this.lore = lore;
+            this.slot = slot;
+            this.items = new ArrayList<>();
+        }
+
+        // Геттеры
+        public String getName() { return name; }
+        public Material getMaterial() { return material; }
+        public List<String> getLore() { return lore; }
+        public int getSlot() { return slot; }
+        public List<NameplateItem> getItems() { return items; }
+
+        public void addItem(NameplateItem item) {
+            items.add(item);
+        }
+
+        public int getTotalItems() {
+            return items.size();
+        }
+
+        public int getPurchasedItemsCount(Player player, LuckPerms luckPerms) {
+            int count = 0;
+            for (NameplateItem item : items) {
+                if (hasPurchasedItem(player, item, luckPerms)) {
+                    count++;
+                }
+            }
+            return count;
+        }
+
+        private boolean hasPurchasedItem(Player player, NameplateItem item, LuckPerms luckPerms) {
+            if (!item.hasPermission()) {
+                return false;
+            }
+
+            if (item.hasContext()) {
+                User user = luckPerms.getUserManager().getUser(player.getUniqueId());
+                if (user != null) {
+                    return user.getCachedData().getPermissionData()
+                            .checkPermission(item.getPermission()).asBoolean();
+                }
+                return false;
+            } else {
+                return player.hasPermission(item.getPermission());
+            }
+        }
+    }
+
+    public NameplateManager(JavaPlugin plugin) {
+        this.plugin = plugin;
+        loadConfig();
+    }
+
+    private void loadConfig() {
+        configFile = new File(plugin.getDataFolder(), "nameplates.yml");
+
+        if (!configFile.exists()) {
+            plugin.saveResource("nameplates.yml", false);
+            plugin.getLogger().info("Создан новый файл конфигурации nameplates.yml");
+        }
+
+        config = YamlConfiguration.loadConfiguration(configFile);
+        reloadNameplates();
+    }
+
+    public void reloadNameplates() {
+        nameplates.clear();
+        packs.clear(); // Очищаем пакеты
+
+        // Загружаем настройки меню
+        ConfigurationSection menuSection = config.getConfigurationSection("menu");
+        if (menuSection != null) {
+            menuTitle = menuSection.getString("title", "&6&lВыбор ника");
+            menuRows = menuSection.getInt("rows", 3);
+            // Ограничиваем rows от 1 до 6
+            menuRows = Math.max(1, Math.min(6, menuRows));
+
+            // Загружаем пакеты из конфига
+            ConfigurationSection packsSection = menuSection.getConfigurationSection("packs");
+            if (packsSection != null) {
+                for (String packName : packsSection.getKeys(false)) {
+                    ConfigurationSection packSection = packsSection.getConfigurationSection(packName);
+                    if (packSection != null) {
+                        String name = packSection.getString("name", packName);
+                        Material material = Material.matchMaterial(packSection.getString("material", "CHEST"));
+                        if (material == null) material = Material.CHEST;
+                        List<String> lore = packSection.getStringList("lore");
+                        int slot = packSection.getInt("slot", 0);
+
+                        packs.put(packName, new PackItem(name, material, lore, slot));
+                    }
+                }
+            }
+        } else {
+            menuTitle = "&6&lВыбор ника";
+            menuRows = 3;
+        }
+
+        // Загружаем таблички
+        ConfigurationSection nameplatesSection = config.getConfigurationSection("nameplates");
+        if (nameplatesSection != null) {
+            for (String key : nameplatesSection.getKeys(false)) {
+                try {
+                    NameplateItem item = loadNameplateItem(key, nameplatesSection.getConfigurationSection(key));
+                    if (item != null) {
+                        nameplates.put(key, item);
+
+                        // Добавляем ники в соответствующие пакеты
+                        if (item.hasPack()) {
+                            PackItem pack = packs.get(item.getPack());
+                            if (pack != null) {
+                                pack.addItem(item);
+                            }
+                        }
+                    }
+                } catch (Exception e) {
+                    plugin.getLogger().log(Level.WARNING, "Ошибка при загрузке ника " + key + ": " + e.getMessage());
+                }
+            }
+        }
+
+        plugin.getLogger().info("Загружено " + nameplates.size() + " ников и " + packs.size() + " пакетов");
+    }
+
+    private NameplateItem loadNameplateItem(String id, ConfigurationSection section) {
+        try {
+            String materialStr = section.getString("material", "NAME_TAG");
+            Material material = Material.getMaterial(materialStr);
+            if (material == null) {
+                plugin.getLogger().warning("Неизвестный материал: " + materialStr + " для ника " + id);
+                material = Material.NAME_TAG;
+            }
+
+            String name = section.getString("name", "Табличка");
+            List<String> lore = section.getStringList("lore");
+            double price = section.getDouble("price", 100.0);
+            String permission = section.getString("permission", null);
+            String pack = section.getString("pack", null);
+            String date = section.getString("date", null);
+
+            boolean hiddenInShop = section.getBoolean("hidden-in-shop", false);
+
+            Map<String, String> context = null;
+            ConfigurationSection contextSection = section.getConfigurationSection("context");
+            if (contextSection != null) {
+                context = new HashMap<>();
+                for (String contextKey : contextSection.getKeys(false)) {
+                    context.put(contextKey, contextSection.getString(contextKey));
+                }
+            }
+
+            Integer customModelData = null;
+            if (section.contains("custom-model-data")) {
+                customModelData = section.getInt("custom-model-data");
+            }
+
+            String customModel = section.getString("custom-model", null);
+
+            return new NameplateItem(id, material, name, lore, price, permission,
+                    context, customModelData, customModel, hiddenInShop, pack, date);
+
+        } catch (Exception e) {
+            plugin.getLogger().log(Level.WARNING, "Ошибка загрузки ников " + id, e);
+            return null;
+        }
+    }
+
+    // Метод для перезагрузки конфига
+    public boolean reloadConfig() {
+        try {
+            config = YamlConfiguration.loadConfiguration(configFile);
+            reloadNameplates();
+            return true;
+        } catch (Exception e) {
+            plugin.getLogger().log(Level.SEVERE, "Ошибка при перезагрузке конфига", e);
+            return false;
+        }
+    }
+
+    // Сохранение конфига
+    public void saveConfig() {
+        try {
+            config.save(configFile);
+        } catch (IOException e) {
+            plugin.getLogger().log(Level.SEVERE, "Не удалось сохранить конфиг", e);
+        }
+    }
+
+    // Геттеры
+    public List<NameplateItem> getNameplates() {
+        return new ArrayList<>(nameplates.values());
+    }
+
+    public List<NameplateItem> getNameplatesByPack(String packName) {
+        return nameplates.values().stream()
+                .filter(item -> packName.equals(item.getPack()))
+                .collect(Collectors.toList());
+    }
+
+    public List<PackItem> getPacks() {
+        return new ArrayList<>(packs.values());
+    }
+
+    public PackItem getPack(String packName) {
+        return packs.get(packName);
+    }
+
+    public NameplateItem getNameplate(String id) {
+        return nameplates.get(id);
+    }
+
+    public String getMenuTitle() {
+        return menuTitle;
+    }
+
+    public int getMenuRows() {
+        return menuRows;
+    }
+}

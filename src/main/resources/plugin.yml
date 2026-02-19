@@ -1,0 +1,31 @@
+name: AkatNameplates
+version: 1.0.0
+main: net.akat.NameplatesPlugin
+api-version: 1.21
+folia-supported: true
+
+commands:
+  confirm:
+    description: Подтвердить действие
+    usage: /confirm <id>
+  cancel:
+    description: Отменить действие
+    usage: /cancel <id>
+  akatnameplates:
+    description: Управление табличками
+    aliases: [plates, tags, anp, np]
+    usage: |
+      /anp - открыть магазин
+      /anp shop - открыть магазин покупки
+      /anp my - открыть список купленных табличек
+
+permissions:
+  akatnameplates.use:
+    description: Позволяет использовать команду /akatnameplates
+    default: true
+  akatnameplates.admin:
+    description: Позволяет открывать меню другим игрокам
+    default: op
+  akatnameplates.reload:
+    description: Позволяет перезагружать конфиг табличек
+    default: op

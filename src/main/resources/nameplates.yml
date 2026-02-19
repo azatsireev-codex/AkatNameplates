@@ -1,0 +1,230 @@
+menu:
+  title: "&8Купить ник"
+  rows: 6
+
+nameplates:
+  angel:
+    material: NAME_TAG
+    name: "#DBB3A8Ангел"
+    lore:
+      - "#EFD2C1Покажите всем свой статус"
+      - "#EFD2C1на сервере!"
+    price: 100
+    permission: "nameplates.equip.angel"
+
+  banner:
+    material: NAME_TAG
+    name: "#C64B4BБаннер"
+    lore:
+      - "#EF9999Покажите всем свой статус"
+      - "#EF9999на сервере!"
+    price: 100
+    permission: "nameplates.equip.banner"
+
+  carpet:
+    material: NAME_TAG
+    name: "#782A2BКовёр"
+    lore:
+      - "#B39784Покажите всем свой статус"
+      - "#B39784на сервере!"
+    price: 100
+    permission: "nameplates.equip.carpet"
+
+  egg:
+    material: NAME_TAG
+    name: "#FF921BЯйцо"
+    lore:
+      - "#FFF4E2Покажите всем свой статус"
+      - "#FFF4E2на сервере!"
+    price: 100
+    permission: "nameplates.equip.egg"
+
+  enter:
+    material: NAME_TAG
+    name: "#4B4B4BEnter"
+    lore:
+      - "#C6C6C6Покажите всем свой статус"
+      - "#C6C6C6на сервере!"
+    price: 100
+    permission: "nameplates.equip.enter"
+
+  eye:
+    material: NAME_TAG
+    name: "#00C633Глаз"
+    lore:
+      - "#CFF0CDПокажите всем свой статус"
+      - "#CFF0CDна сервере!"
+    price: 100
+    permission: "nameplates.equip.eye"
+
+  game:
+    material: NAME_TAG
+    name: "#FF5D52Игра"
+    lore:
+      - "#00C4E8Покажите всем свой статус"
+      - "#00C4E8на сервере!"
+    price: 100
+    permission: "nameplates.equip.game"
+
+  halloween:
+    material: NAME_TAG
+    name: "#ED6000Хэллоуин"
+    lore:
+      - "#3F3F74Покажите всем свой статус"
+      - "#3F3F74на сервере!"
+    price: 100
+    permission: "nameplates.equip.halloween"
+
+  hutao:
+    material: NAME_TAG
+    name: "#D94D38Hu Tao"
+    lore:
+      - "#9B494CПокажите всем свой статус"
+      - "#9B494Cна сервере!"
+    price: 100
+    permission: "nameplates.equip.hutao"
+
+  mario:
+    material: NAME_TAG
+    name: "#FC1919Марио"
+    lore:
+      - "#00D049Покажите всем свой статус"
+      - "#00D049на сервере!"
+    price: 100
+    permission: "nameplates.equip.mario"
+
+  minecraft:
+    material: NAME_TAG
+    name: "#00C4EDМайнкрафт"
+    lore:
+      - "#5AF3FFПокажите всем свой статус"
+      - "#5AF3FFна сервере!"
+    price: 100
+    permission: "nameplates.equip.minecraft"
+
+  monster:
+    material: NAME_TAG
+    name: "#171928Чудище"
+    lore:
+      - "#79786FПокажите всем свой статус"
+      - "#79786Fна сервере!"
+    price: 100
+    permission: "nameplates.equip.monster"
+
+  nyancat:
+    material: NAME_TAG
+    name: "#FF5E9ANyan Cat"
+    lore:
+      - "#FFA7E4Покажите всем свой статус"
+      - "#FFA7E4на сервере!"
+    price: 100
+    permission: "nameplates.equip.nyancat"
+
+  panda:
+    material: NAME_TAG
+    name: "#000000Панда"
+    lore:
+      - "#FFFFFFПокажите всем свой статус"
+      - "#FFFFFFна сервере!"
+    price: 100
+    permission: "nameplates.equip.panda"
+
+  pig:
+    material: NAME_TAG
+    name: "#E68A8BСвинка"
+    lore:
+      - "#FFBBBCПокажите всем свой статус"
+      - "#FFBBBCна сервере!"
+    price: 100
+    permission: "nameplates.equip.pig"
+
+  pigs:
+    material: NAME_TAG
+    name: "#593931Свинки"
+    lore:
+      - "#E68A8BПокажите всем свой статус"
+      - "#E68A8Bна сервере!"
+    price: 100
+    permission: "nameplates.equip.pigs"
+
+  rabbit:
+    material: NAME_TAG
+    name: "#FCC8F3Кролик"
+    lore:
+      - "#FFFFFFПокажите всем свой статус"
+      - "#FFFFFFна сервере!"
+    price: 100
+    permission: "nameplates.equip.rabbit"
+
+  sign:
+    material: NAME_TAG
+    name: "#967441Табличка"
+    lore:
+      - "#AF8F55Покажите всем свой статус"
+      - "#AF8F55на сервере!"
+    price: 100
+    permission: "nameplates.equip.sign"
+
+  slimes:
+    material: NAME_TAG
+    name: "#45AF5EСлаймы"
+    lore:
+      - "#360000Покажите всем свой статус"
+      - "#360000на сервере!"
+    price: 100
+    permission: "nameplates.equip.slimes"
+
+  starsky:
+    material: NAME_TAG
+    name: "#3E81DFКосмос"
+    lore:
+      - "#5E98FFПокажите всем свой статус"
+      - "#5E98FFна сервере!"
+    price: 100
+    permission: "nameplates.equip.starsky"
+
+  tirex:
+    material: NAME_TAG
+    name: "#000000Google T-Rex"
+    lore:
+      - "#1B1B1BПокажите всем свой статус"
+      - "#1B1B1Bна сервере!"
+    price: 100
+    permission: "nameplates.equip.tirex"
+
+  totem:
+    material: NAME_TAG
+    name: "#DAB176Тотем"
+    lore:
+      - "#FFDA94Покажите всем свой статус"
+      - "#FFDA94на сервере!"
+    price: 100
+    permission: "nameplates.equip.totem"
+
+  trident:
+    material: NAME_TAG
+    name: "#589D8EТрезубец"
+    lore:
+      - "#B2D5CBПокажите всем свой статус"
+      - "#B2D5CBна сервере!"
+    price: 100
+    permission: "nameplates.equip.trident"
+
+  wings:
+    material: NAME_TAG
+    name: "#9EA8C3Крылья"
+    lore:
+      - "#DBE5FFПокажите всем свой статус"
+      - "#DBE5FFна сервере!"
+    price: 100
+    permission: "nameplates.equip.wings"
+
+  xmas:
+    material: NAME_TAG
+    name: "#ABFFFAНовый год"
+    lore:
+      - "#FFFFFFПокажите всем свой статус"
+      - "#FFFFFFна сервере!"
+    price: 100
+    permission: "nameplates.equip.xmas"
+    hidden-in-shop: true
