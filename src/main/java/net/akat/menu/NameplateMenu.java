@@ -154,7 +154,13 @@ public class NameplateMenu {
         ItemMeta meta = stack.getItemMeta();
 
         if (meta != null) {
-            meta.setDisplayName(ChatColor.YELLOW + packInfo.name);
+            int newItemsCount = countNewItems(packItems);
+            String displayName = ChatColor.YELLOW + packInfo.name;
+            if (newItemsCount > 0) {
+                displayName = displayName + ChatColor.GRAY + " [" + ChatColor.WHITE + "\uE063 "
+                        + ChatColor.GOLD + newItemsCount + ChatColor.GRAY + "]";
+            }
+            meta.setDisplayName(displayName);
 
             List<String> lore = new ArrayList<>(packInfo.lore);
             lore.add(" ");
@@ -178,6 +184,11 @@ public class NameplateMenu {
             lore.add("§7Куплено: §e" + purchasedItems + "§7/§a" + totalItems);
             lore.add(" ");
 
+            if (newItemsCount > 0) {
+                lore.add("§7Новые ники: §f\uE063 §e" + newItemsCount);
+                lore.add(" ");
+            }
+
             // Процент заполнения
             double percentage = totalItems > 0 ?
                     (double) purchasedItems / totalItems * 100 : 0;
@@ -193,6 +204,16 @@ public class NameplateMenu {
             e.setCancelled(true);
             openPackMenu(player, packInfo.name, 0);
         }));
+    }
+
+    private int countNewItems(List<NameplateItem> packItems) {
+        int count = 0;
+        for (NameplateItem item : packItems) {
+            if (!item.isHiddenInShop() && item.shouldAddSymbol()) {
+                count++;
+            }
+        }
+        return count;
     }
 
     private SGButton createPreviewCurrentButton(Player player) {
