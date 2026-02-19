@@ -157,8 +157,8 @@ public class NameplateMenu {
             int newItemsCount = countNewItems(packItems);
             String displayName = ChatColor.YELLOW + packInfo.name;
             if (newItemsCount > 0) {
-                displayName = displayName + ChatColor.GRAY + " [" + ChatColor.WHITE + "\uE063 "
-                        + ChatColor.GOLD + newItemsCount + ChatColor.GRAY + "]";
+                displayName = displayName + ChatColor.GRAY + " " + ChatColor.GOLD + newItemsCount
+                        + ChatColor.WHITE + "\uE063";
             }
             meta.setDisplayName(displayName);
 
@@ -183,12 +183,6 @@ public class NameplateMenu {
             lore.add("§7Всего ников: §a" + totalItems);
             lore.add("§7Куплено: §e" + purchasedItems + "§7/§a" + totalItems);
             lore.add(" ");
-
-            if (newItemsCount > 0) {
-                lore.add("§7Новые ники: §f\uE063 §e" + newItemsCount);
-                lore.add(" ");
-            }
-
             // Процент заполнения
             double percentage = totalItems > 0 ?
                     (double) purchasedItems / totalItems * 100 : 0;
