@@ -51,7 +51,7 @@ public class NameplatesPlugin extends JavaPlugin {
                 menuTitle,
                 menuRows,
                 actions,
-                manager.getPackModelData()
+                manager.getPackModels()
         );
 
         getCommand("confirm").setExecutor(new ConfirmationCommandHandler());

@@ -38,7 +38,7 @@ public class NameplateMenu {
     private final String menuTitle;
     private final int menuRows;
     private final NameplateActions actions;
-    private final Map<String, Integer> packModelData;
+    private final Map<String, String> packModels;
 
     private static final int PREVIOUS_PAGE_SLOT = 45;
     private static final int NEXT_PAGE_SLOT = 53;
@@ -70,26 +70,26 @@ public class NameplateMenu {
         final String name;
         final Material material;
         final List<String> lore;
-        final Integer modelData;
+        final String model;
 
-        PackInfo(String name, Material material, List<String> lore, Integer modelData) {
+        PackInfo(String name, Material material, List<String> lore, String model) {
             this.name = name;
             this.material = material;
             this.lore = lore;
-            this.modelData = modelData;
+            this.model = model;
         }
     }
 
     public NameplateMenu(SpiGUI spiGUI, List<NameplateItem> items,
                          String menuTitle, int menuRows, NameplateActions actions,
-                         Map<String, Integer> packModelData) {
+                         Map<String, String> packModels) {
         this.spiGUI = spiGUI;
         this.allItems = items;
         this.luckPerms = LuckPermsProvider.get();
         this.menuTitle = menuTitle;
         this.menuRows = menuRows;
         this.actions = actions;
-        this.packModelData = new HashMap<>(packModelData);
+        this.packModels = new HashMap<>(packModels);
 
         initPackCache();
     }
@@ -111,9 +111,9 @@ public class NameplateMenu {
             if (!packInfoCache.containsKey(packName)) {
                 Material material = Material.CHEST;
                 List<String> lore = new ArrayList<>();
-                Integer modelData = packModelData.get(packName);
+                String model = packModels.get(packName);
 
-                packInfoCache.put(packName, new PackInfo(packName, material, lore, modelData));
+                packInfoCache.put(packName, new PackInfo(packName, material, lore, model));
             }
         }
     }
@@ -201,8 +201,20 @@ public class NameplateMenu {
             lore.add("§eНажмите для просмотра");
 
             meta.setLore(lore);
-            if (packInfo.modelData != null) {
-                meta.setCustomModelData(packInfo.modelData);
+            if (packInfo.model != null && !packInfo.model.isEmpty()) {
+                try {
+                    String[] parts = packInfo.model.split(":", 2);
+                    if (parts.length == 2) {
+                        NamespacedKey modelKey = new NamespacedKey(parts[0], parts[1]);
+                        try {
+                            meta.setItemModel(modelKey);
+                        } catch (NoSuchMethodError e) {
+                            Bukkit.getLogger().warning("Кастомные модели паков не поддерживаются в этой версии Minecraft");
+                        }
+                    }
+                } catch (Exception e) {
+                    Bukkit.getLogger().warning("Ошибка при установке модели для пака " + packInfo.name + ": " + e.getMessage());
+                }
             }
             stack.setItemMeta(meta);
         }

@@ -29,7 +29,7 @@ public class NameplateManager {
     private FileConfiguration packConfig;
     private final Map<String, NameplateItem> nameplates = new HashMap<>();
     private final Map<String, PackItem> packs = new HashMap<>(); // Новое поле для пакетов
-    private final Map<String, Integer> packModelData = new HashMap<>();
+    private final Map<String, String> packModels = new HashMap<>();
     private String menuTitle;
     private int menuRows;
 
@@ -172,7 +172,7 @@ public class NameplateManager {
         }
 
         ensurePackConfigContains(usedPackNames);
-        loadPackModelData(usedPackNames);
+        loadPackModels(usedPackNames);
 
         plugin.getLogger().info("Загружено " + nameplates.size() + " ников и " + packs.size() + " пакетов");
     }
@@ -246,21 +246,21 @@ public class NameplateManager {
         }
     }
 
-    private void loadPackModelData(Set<String> packNames) {
-        packModelData.clear();
+    private void loadPackModels(Set<String> packNames) {
+        packModels.clear();
         if (packConfig == null) {
             packConfig = YamlConfiguration.loadConfiguration(packConfigFile);
         }
 
         for (String packName : packNames) {
             ConfigurationSection packSection = packConfig.getConfigurationSection("packs." + packName);
-            if (packSection == null || !packSection.contains("model-data")) {
+            if (packSection == null || !packSection.contains("model")) {
                 continue;
             }
 
-            int modelData = packSection.getInt("model-data", -1);
-            if (modelData > 0) {
-                packModelData.put(packName, modelData);
+            String model = packSection.getString("model", "").trim();
+            if (!model.isEmpty()) {
+                packModels.put(packName, model);
             }
         }
     }
@@ -360,7 +360,7 @@ public class NameplateManager {
         return menuRows;
     }
 
-    public Map<String, Integer> getPackModelData() {
-        return new HashMap<>(packModelData);
+    public Map<String, String> getPackModels() {
+        return new HashMap<>(packModels);
     }
 }

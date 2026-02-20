@@ -1,4 +1,4 @@
 packs:
   # Пример:
   # "Мистика":
-  #   model-data: 1001
+  #   model: "minecraft:your_model_key"
