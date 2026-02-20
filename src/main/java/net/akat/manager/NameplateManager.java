@@ -311,7 +311,7 @@ public class NameplateManager {
     public boolean reloadConfig() {
         try {
             config = YamlConfiguration.loadConfiguration(configFile);
-            packConfig = YamlConfiguration.loadConfiguration(packConfigFile);
+            initializePackConfig(collectPackNamesFromNameplatesConfig());
             reloadNameplates();
             return true;
         } catch (Exception e) {
