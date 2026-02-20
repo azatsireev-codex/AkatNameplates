@@ -41,13 +41,13 @@ public class NameplateMenu {
     private final Map<String, String> packModels;
     private final Map<String, String> buttonModels;
 
-    private static final int PREVIOUS_PAGE_SLOT = 45;
-    private static final int NEXT_PAGE_SLOT = 53;
-    private static final int BACK_BUTTON_SLOT = 49;
-    private static final int EQUIP_ALL_BUTTON_SLOT = 48;
-    private static final int UNEQUIP_SLOT_MAIN = 48;
-    private static final int CURRENT_NICK_SLOT = 50;
-    private static final int DONATE_INFO_SLOT = 49;
+    private static final int PREVIOUS_PAGE_SLOT = 29;
+    private static final int NEXT_PAGE_SLOT = 33;
+    private static final int BACK_BUTTON_SLOT = 31;
+    private static final int EQUIP_ALL_BUTTON_SLOT = 30;
+    private static final int UNEQUIP_SLOT_MAIN = 30;
+    private static final int CURRENT_NICK_SLOT = 32;
+    private static final int DONATE_INFO_SLOT = 31;
     private static final String DONATE_URL = "https://neft.games/donate";
 
     private static final int[] PACK_SLOTS = {
@@ -58,7 +58,7 @@ public class NameplateMenu {
     private static final int[] ITEM_SLOTS = {
             10, 11, 12, 13, 14, 15, 16,
             19, 20, 21, 22, 23, 24, 25,
-            28, 29, 30, 31, 32, 33, 34
+            37, 38, 39, 40, 41, 42, 43
     };
 
     private final Map<UUID, Integer> playerPages = new HashMap<>();
