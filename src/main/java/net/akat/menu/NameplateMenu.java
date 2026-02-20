@@ -54,18 +54,9 @@ public class NameplateMenu {
     private final int nameplatesMenuPreviousSlot;
     private final int nameplatesMenuNextSlot;
 
-    private static final String DONATE_URL = "https://neft.games/donate";
-
-    private static final int[] PACK_SLOTS = {
-            10, 11, 12, 13, 14, 15, 16,
-            19, 20, 21, 22, 23, 24, 25
-    };
-
-    private static final int[] ITEM_SLOTS = {
-            10, 11, 12, 13, 14, 15, 16,
-            19, 20, 21, 22, 23, 24, 25,
-            37, 38, 39, 40, 41, 42, 43
-    };
+    private final String donateUrl;
+    private final int[] packSlots;
+    private final int[] itemSlots;
 
     private final Map<UUID, Integer> playerPages = new HashMap<>();
     private final Map<UUID, Integer> playerPackMenuPages = new HashMap<>();
@@ -95,6 +86,7 @@ public class NameplateMenu {
                          int packsMenuPreviousSlot, int packsMenuNextSlot,
                          int nameplatesMenuBackSlot, int nameplatesMenuUnequipSlot,
                          int nameplatesMenuPreviousSlot, int nameplatesMenuNextSlot,
+                         String donateUrl, List<Integer> packSlots, List<Integer> itemSlots,
                          NameplateActions actions,
                          Map<String, String> packModels, Map<String, String> buttonModels) {
         this.spiGUI = spiGUI;
@@ -113,6 +105,9 @@ public class NameplateMenu {
         this.nameplatesMenuUnequipSlot = nameplatesMenuUnequipSlot;
         this.nameplatesMenuPreviousSlot = nameplatesMenuPreviousSlot;
         this.nameplatesMenuNextSlot = nameplatesMenuNextSlot;
+        this.donateUrl = donateUrl;
+        this.packSlots = packSlots.stream().mapToInt(Integer::intValue).toArray();
+        this.itemSlots = itemSlots.stream().mapToInt(Integer::intValue).toArray();
         this.actions = actions;
         this.packModels = new HashMap<>(packModels);
         this.buttonModels = new HashMap<>(buttonModels);
@@ -181,7 +176,7 @@ public class NameplateMenu {
                 packsMenuRows
         );
 
-        int packsPerPage = PACK_SLOTS.length;
+        int packsPerPage = packSlots.length;
         int totalPages = (int) Math.ceil((double) packs.size() / packsPerPage);
         if (totalPages == 0) {
             totalPages = 1;
@@ -204,7 +199,7 @@ public class NameplateMenu {
             List<NameplateItem> packItems = packItemsCache.get(packName);
 
             // Создаем кнопку пакета
-            menu.setButton(PACK_SLOTS[packIndex], createPackButton(packInfo, packItems, player));
+            menu.setButton(packSlots[packIndex], createPackButton(packInfo, packItems, player));
             packIndex++;
         }
 
@@ -364,7 +359,7 @@ public class NameplateMenu {
             meta.setLore(Arrays.asList(
                     ChatColor.GRAY + "1 нефткоин " + ChatColor.WHITE + "\uE058" + ChatColor.GRAY + " = 1 рубль.",
                     ChatColor.GRAY + "Пополнить баланс можно на сайте:",
-                    ChatColor.YELLOW + DONATE_URL,
+                    ChatColor.YELLOW + donateUrl,
                     "",
                     ChatColor.GRAY + "Кастомные ники видны над головой",
                     ChatColor.GRAY + "почти на всех режимах",
@@ -380,7 +375,7 @@ public class NameplateMenu {
             e.setCancelled(true);
 
             TextComponent link = new TextComponent(ChatColor.GREEN + "Открыть страницу доната");
-            link.setClickEvent(new ClickEvent(ClickEvent.Action.OPEN_URL, DONATE_URL));
+            link.setClickEvent(new ClickEvent(ClickEvent.Action.OPEN_URL, donateUrl));
 
             player.spigot().sendMessage(link);
         }));
@@ -430,7 +425,7 @@ public class NameplateMenu {
             return Double.compare(a.getPrice(), b.getPrice());
         });
 
-        int itemsPerPage = ITEM_SLOTS.length;
+        int itemsPerPage = itemSlots.length;
         int totalPages = (int) Math.ceil((double) visibleItems.size() / itemsPerPage);
 
         if (page < 0) page = 0;
@@ -451,8 +446,8 @@ public class NameplateMenu {
         for (int i = startIndex; i < endIndex; i++) {
             NameplateItem item = visibleItems.get(i);
             int slotIndex = i - startIndex;
-            if (slotIndex < ITEM_SLOTS.length) {
-                menu.setButton(ITEM_SLOTS[slotIndex], createItemButton(item, player));
+            if (slotIndex < itemSlots.length) {
+                menu.setButton(itemSlots[slotIndex], createItemButton(item, player));
             }
         }
 

@@ -5,6 +5,8 @@ menu:
   packs-menu:
     title: "&8Купить ник"
     rows: 4
+    donate-url: "https://neft.games/donate"
+    pack-slots: [10, 11, 12, 13, 14, 15, 16, 19, 20, 21, 22, 23, 24, 25]
     slots:
       previous: 29
       unequip: 30
@@ -15,6 +17,7 @@ menu:
   nameplates-menu:
     title: "&8Пакет: {pack} &7(&f{currentPage}/{totalPages}&7)"
     rows: 6
+    item-slots: [10, 11, 12, 13, 14, 15, 16, 19, 20, 21, 22, 23, 24, 25, 37, 38, 39, 40, 41, 42, 43]
     slots:
       previous: 29
       back: 31

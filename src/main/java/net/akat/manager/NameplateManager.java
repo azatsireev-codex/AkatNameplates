@@ -13,6 +13,8 @@ import org.bukkit.plugin.java.JavaPlugin;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.Map;
@@ -46,6 +48,10 @@ public class NameplateManager {
     private int nameplatesMenuUnequipSlot;
     private int nameplatesMenuPreviousSlot;
     private int nameplatesMenuNextSlot;
+
+    private String donateUrl;
+    private List<Integer> packsMenuPackSlots;
+    private List<Integer> nameplatesMenuItemSlots;
 
     // Класс для хранения информации о пакете
     public static class PackItem {
@@ -188,9 +194,30 @@ public class NameplateManager {
             nameplatesMenuPreviousSlot = nameplatesMenuSlotsSection != null
                     ? nameplatesMenuSlotsSection.getInt("previous", 29)
                     : 29;
-            nameplatesMenuNextSlot = nameplatesMenuSlotsSection != null
-                    ? nameplatesMenuSlotsSection.getInt("next", 33)
-                    : 33;
+            donateUrl = packsMenuSection != null
+                    ? packsMenuSection.getString("donate-url", "https://neft.games/donate")
+                    : "https://neft.games/donate";
+
+            packsMenuPackSlots = packsMenuSection != null
+                    ? packsMenuSection.getIntegerList("pack-slots")
+                    : Collections.emptyList();
+            if (packsMenuPackSlots == null || packsMenuPackSlots.isEmpty()) {
+                packsMenuPackSlots = Arrays.asList(
+                        10, 11, 12, 13, 14, 15, 16,
+                        19, 20, 21, 22, 23, 24, 25
+                );
+            }
+
+            nameplatesMenuItemSlots = nameplatesMenuSection != null
+                    ? nameplatesMenuSection.getIntegerList("item-slots")
+                    : Collections.emptyList();
+            if (nameplatesMenuItemSlots == null || nameplatesMenuItemSlots.isEmpty()) {
+                nameplatesMenuItemSlots = Arrays.asList(
+                        10, 11, 12, 13, 14, 15, 16,
+                        19, 20, 21, 22, 23, 24, 25,
+                        37, 38, 39, 40, 41, 42, 43
+                );
+            }
 
             // Загружаем пакеты из конфига
             ConfigurationSection packsSection = menuSection.getConfigurationSection("packs");
@@ -222,6 +249,16 @@ public class NameplateManager {
             nameplatesMenuUnequipSlot = 30;
             nameplatesMenuPreviousSlot = 29;
             nameplatesMenuNextSlot = 33;
+            donateUrl = "https://neft.games/donate";
+            packsMenuPackSlots = Arrays.asList(
+                    10, 11, 12, 13, 14, 15, 16,
+                    19, 20, 21, 22, 23, 24, 25
+            );
+            nameplatesMenuItemSlots = Arrays.asList(
+                    10, 11, 12, 13, 14, 15, 16,
+                    19, 20, 21, 22, 23, 24, 25,
+                    37, 38, 39, 40, 41, 42, 43
+            );
         }
 
         // Загружаем таблички
@@ -505,6 +542,18 @@ public class NameplateManager {
 
     public int getNameplatesMenuNextSlot() {
         return nameplatesMenuNextSlot;
+    }
+
+    public String getDonateUrl() {
+        return donateUrl;
+    }
+
+    public List<Integer> getPacksMenuPackSlots() {
+        return new ArrayList<>(packsMenuPackSlots);
+    }
+
+    public List<Integer> getNameplatesMenuItemSlots() {
+        return new ArrayList<>(nameplatesMenuItemSlots);
     }
 
     public Map<String, String> getPackModels() {

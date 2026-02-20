@@ -136,6 +136,9 @@ public class NameplateCommand implements CommandExecutor, TabCompleter {
                     manager.getNameplatesMenuUnequipSlot(),
                     manager.getNameplatesMenuPreviousSlot(),
                     manager.getNameplatesMenuNextSlot(),
+                    manager.getDonateUrl(),
+                    manager.getPacksMenuPackSlots(),
+                    manager.getNameplatesMenuItemSlots(),
                     actions,
                     manager.getPackModels(),
                     manager.getButtonModels()

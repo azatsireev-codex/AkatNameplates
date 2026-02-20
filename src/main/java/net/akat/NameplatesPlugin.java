@@ -63,6 +63,9 @@ public class NameplatesPlugin extends JavaPlugin {
                 manager.getNameplatesMenuUnequipSlot(),
                 manager.getNameplatesMenuPreviousSlot(),
                 manager.getNameplatesMenuNextSlot(),
+                manager.getDonateUrl(),
+                manager.getPacksMenuPackSlots(),
+                manager.getNameplatesMenuItemSlots(),
                 actions,
                 manager.getPackModels(),
                 manager.getButtonModels()
