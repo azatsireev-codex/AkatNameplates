@@ -54,6 +54,13 @@ public class NameplatesPlugin extends JavaPlugin {
                 packsMenuRows,
                 nameplatesMenuTitle,
                 nameplatesMenuRows,
+                manager.getPacksMenuInfoSlot(),
+                manager.getPacksMenuPreviewSlot(),
+                manager.getPacksMenuUnequipSlot(),
+                manager.getNameplatesMenuBackSlot(),
+                manager.getNameplatesMenuUnequipSlot(),
+                manager.getNameplatesMenuPreviousSlot(),
+                manager.getNameplatesMenuNextSlot(),
                 actions,
                 manager.getPackModels(),
                 manager.getButtonModels()

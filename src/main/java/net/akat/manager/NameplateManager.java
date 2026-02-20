@@ -36,6 +36,15 @@ public class NameplateManager {
     private String nameplatesMenuTitle;
     private int nameplatesMenuRows;
 
+    private int packsMenuInfoSlot;
+    private int packsMenuPreviewSlot;
+    private int packsMenuUnequipSlot;
+
+    private int nameplatesMenuBackSlot;
+    private int nameplatesMenuUnequipSlot;
+    private int nameplatesMenuPreviousSlot;
+    private int nameplatesMenuNextSlot;
+
     // Класс для хранения информации о пакете
     public static class PackItem {
         private final String name;
@@ -146,6 +155,35 @@ public class NameplateManager {
                     : legacyRows;
             nameplatesMenuRows = Math.max(1, Math.min(6, nameplatesMenuRows));
 
+            ConfigurationSection packsMenuSlotsSection = packsMenuSection != null
+                    ? packsMenuSection.getConfigurationSection("slots")
+                    : null;
+            packsMenuInfoSlot = packsMenuSlotsSection != null
+                    ? packsMenuSlotsSection.getInt("info", 31)
+                    : 31;
+            packsMenuPreviewSlot = packsMenuSlotsSection != null
+                    ? packsMenuSlotsSection.getInt("preview-current", 32)
+                    : 32;
+            packsMenuUnequipSlot = packsMenuSlotsSection != null
+                    ? packsMenuSlotsSection.getInt("unequip", 30)
+                    : 30;
+
+            ConfigurationSection nameplatesMenuSlotsSection = nameplatesMenuSection != null
+                    ? nameplatesMenuSection.getConfigurationSection("slots")
+                    : null;
+            nameplatesMenuBackSlot = nameplatesMenuSlotsSection != null
+                    ? nameplatesMenuSlotsSection.getInt("back", 31)
+                    : 31;
+            nameplatesMenuUnequipSlot = nameplatesMenuSlotsSection != null
+                    ? nameplatesMenuSlotsSection.getInt("unequip", 30)
+                    : 30;
+            nameplatesMenuPreviousSlot = nameplatesMenuSlotsSection != null
+                    ? nameplatesMenuSlotsSection.getInt("previous", 29)
+                    : 29;
+            nameplatesMenuNextSlot = nameplatesMenuSlotsSection != null
+                    ? nameplatesMenuSlotsSection.getInt("next", 33)
+                    : 33;
+
             // Загружаем пакеты из конфига
             ConfigurationSection packsSection = menuSection.getConfigurationSection("packs");
             if (packsSection != null) {
@@ -167,6 +205,13 @@ public class NameplateManager {
             packsMenuRows = 3;
             nameplatesMenuTitle = "§8Пакет: {pack} §7(§f{currentPage}/{totalPages}§7)";
             nameplatesMenuRows = 3;
+            packsMenuInfoSlot = 31;
+            packsMenuPreviewSlot = 32;
+            packsMenuUnequipSlot = 30;
+            nameplatesMenuBackSlot = 31;
+            nameplatesMenuUnequipSlot = 30;
+            nameplatesMenuPreviousSlot = 29;
+            nameplatesMenuNextSlot = 33;
         }
 
         // Загружаем таблички
@@ -413,6 +458,35 @@ public class NameplateManager {
 
     public int getNameplatesMenuRows() {
         return nameplatesMenuRows;
+    }
+
+
+    public int getPacksMenuInfoSlot() {
+        return packsMenuInfoSlot;
+    }
+
+    public int getPacksMenuPreviewSlot() {
+        return packsMenuPreviewSlot;
+    }
+
+    public int getPacksMenuUnequipSlot() {
+        return packsMenuUnequipSlot;
+    }
+
+    public int getNameplatesMenuBackSlot() {
+        return nameplatesMenuBackSlot;
+    }
+
+    public int getNameplatesMenuUnequipSlot() {
+        return nameplatesMenuUnequipSlot;
+    }
+
+    public int getNameplatesMenuPreviousSlot() {
+        return nameplatesMenuPreviousSlot;
+    }
+
+    public int getNameplatesMenuNextSlot() {
+        return nameplatesMenuNextSlot;
     }
 
     public Map<String, String> getPackModels() {

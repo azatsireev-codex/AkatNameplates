@@ -127,6 +127,13 @@ public class NameplateCommand implements CommandExecutor, TabCompleter {
                     manager.getPacksMenuRows(),
                     manager.getNameplatesMenuTitle(),
                     manager.getNameplatesMenuRows(),
+                    manager.getPacksMenuInfoSlot(),
+                    manager.getPacksMenuPreviewSlot(),
+                    manager.getPacksMenuUnequipSlot(),
+                    manager.getNameplatesMenuBackSlot(),
+                    manager.getNameplatesMenuUnequipSlot(),
+                    manager.getNameplatesMenuPreviousSlot(),
+                    manager.getNameplatesMenuNextSlot(),
                     actions,
                     manager.getPackModels(),
                     manager.getButtonModels()

@@ -5,10 +5,19 @@ menu:
   packs-menu:
     title: "&8Купить ник"
     rows: 4
+    slots:
+      unequip: 30
+      info: 31
+      preview-current: 32
 
   nameplates-menu:
     title: "&8Пакет: {pack} &7(&f{currentPage}/{totalPages}&7)"
     rows: 6
+    slots:
+      previous: 29
+      back: 31
+      unequip: 30
+      next: 33
 
 nameplates:
   angel:

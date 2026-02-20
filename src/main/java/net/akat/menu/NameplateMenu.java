@@ -43,13 +43,15 @@ public class NameplateMenu {
     private final Map<String, String> packModels;
     private final Map<String, String> buttonModels;
 
-    private static final int PREVIOUS_PAGE_SLOT = 29;
-    private static final int NEXT_PAGE_SLOT = 33;
-    private static final int BACK_BUTTON_SLOT = 31;
-    private static final int EQUIP_ALL_BUTTON_SLOT = 30;
-    private static final int UNEQUIP_SLOT_MAIN = 30;
-    private static final int CURRENT_NICK_SLOT = 32;
-    private static final int DONATE_INFO_SLOT = 31;
+    private final int packsMenuInfoSlot;
+    private final int packsMenuPreviewSlot;
+    private final int packsMenuUnequipSlot;
+
+    private final int nameplatesMenuBackSlot;
+    private final int nameplatesMenuUnequipSlot;
+    private final int nameplatesMenuPreviousSlot;
+    private final int nameplatesMenuNextSlot;
+
     private static final String DONATE_URL = "https://neft.games/donate";
 
     private static final int[] PACK_SLOTS = {
@@ -86,6 +88,9 @@ public class NameplateMenu {
     public NameplateMenu(SpiGUI spiGUI, List<NameplateItem> items,
                          String packsMenuTitle, int packsMenuRows,
                          String nameplatesMenuTitle, int nameplatesMenuRows,
+                         int packsMenuInfoSlot, int packsMenuPreviewSlot, int packsMenuUnequipSlot,
+                         int nameplatesMenuBackSlot, int nameplatesMenuUnequipSlot,
+                         int nameplatesMenuPreviousSlot, int nameplatesMenuNextSlot,
                          NameplateActions actions,
                          Map<String, String> packModels, Map<String, String> buttonModels) {
         this.spiGUI = spiGUI;
@@ -95,6 +100,13 @@ public class NameplateMenu {
         this.packsMenuRows = packsMenuRows;
         this.nameplatesMenuTitle = nameplatesMenuTitle;
         this.nameplatesMenuRows = nameplatesMenuRows;
+        this.packsMenuInfoSlot = packsMenuInfoSlot;
+        this.packsMenuPreviewSlot = packsMenuPreviewSlot;
+        this.packsMenuUnequipSlot = packsMenuUnequipSlot;
+        this.nameplatesMenuBackSlot = nameplatesMenuBackSlot;
+        this.nameplatesMenuUnequipSlot = nameplatesMenuUnequipSlot;
+        this.nameplatesMenuPreviousSlot = nameplatesMenuPreviousSlot;
+        this.nameplatesMenuNextSlot = nameplatesMenuNextSlot;
         this.actions = actions;
         this.packModels = new HashMap<>(packModels);
         this.buttonModels = new HashMap<>(buttonModels);
@@ -175,11 +187,11 @@ public class NameplateMenu {
         }
 
         if (hasAnyPurchasedItemGlobally(player)) {
-            menu.setButton(UNEQUIP_SLOT_MAIN, createUnequipButton(player));
+            menu.setButton(packsMenuUnequipSlot, createUnequipButton(player));
         }
 
-        menu.setButton(CURRENT_NICK_SLOT, createPreviewCurrentButton(player));
-        menu.setButton(DONATE_INFO_SLOT, createDonateInfoButton(player));
+        menu.setButton(packsMenuPreviewSlot, createPreviewCurrentButton(player));
+        menu.setButton(packsMenuInfoSlot, createDonateInfoButton(player));
 
         player.openInventory(menu.getInventory());
     }
@@ -375,17 +387,17 @@ public class NameplateMenu {
             }
         }
 
-        menu.setButton(BACK_BUTTON_SLOT, createBackButton(player));
+        menu.setButton(nameplatesMenuBackSlot, createBackButton(player));
         if (hasAnyPurchasedItem(player, packItems)) {
-            menu.setButton(EQUIP_ALL_BUTTON_SLOT, createUnequipButton(player));
+            menu.setButton(nameplatesMenuUnequipSlot, createUnequipButton(player));
         }
 
         if (totalPages > 1) {
             if (page > 0) {
-                menu.setButton(PREVIOUS_PAGE_SLOT, createPreviousPageButton(player, page - 1, packName));
+                menu.setButton(nameplatesMenuPreviousSlot, createPreviousPageButton(player, page - 1, packName));
             }
             if (page < totalPages - 1) {
-                menu.setButton(NEXT_PAGE_SLOT, createNextPageButton(player, page + 1, packName));
+                menu.setButton(nameplatesMenuNextSlot, createNextPageButton(player, page + 1, packName));
             }
         }
 
