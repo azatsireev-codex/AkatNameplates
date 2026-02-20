@@ -6,9 +6,11 @@ menu:
     title: "&8Купить ник"
     rows: 4
     slots:
+      previous: 29
       unequip: 30
       info: 31
       preview-current: 32
+      next: 33
 
   nameplates-menu:
     title: "&8Пакет: {pack} &7(&f{currentPage}/{totalPages}&7)"

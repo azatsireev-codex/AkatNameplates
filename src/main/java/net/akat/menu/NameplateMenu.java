@@ -46,6 +46,8 @@ public class NameplateMenu {
     private final int packsMenuInfoSlot;
     private final int packsMenuPreviewSlot;
     private final int packsMenuUnequipSlot;
+    private final int packsMenuPreviousSlot;
+    private final int packsMenuNextSlot;
 
     private final int nameplatesMenuBackSlot;
     private final int nameplatesMenuUnequipSlot;
@@ -66,6 +68,7 @@ public class NameplateMenu {
     };
 
     private final Map<UUID, Integer> playerPages = new HashMap<>();
+    private final Map<UUID, Integer> playerPackMenuPages = new HashMap<>();
     private final Map<UUID, String> playerCurrentPack = new HashMap<>();
 
     private final Map<String, List<NameplateItem>> packItemsCache = new HashMap<>();
@@ -89,6 +92,7 @@ public class NameplateMenu {
                          String packsMenuTitle, int packsMenuRows,
                          String nameplatesMenuTitle, int nameplatesMenuRows,
                          int packsMenuInfoSlot, int packsMenuPreviewSlot, int packsMenuUnequipSlot,
+                         int packsMenuPreviousSlot, int packsMenuNextSlot,
                          int nameplatesMenuBackSlot, int nameplatesMenuUnequipSlot,
                          int nameplatesMenuPreviousSlot, int nameplatesMenuNextSlot,
                          NameplateActions actions,
@@ -103,6 +107,8 @@ public class NameplateMenu {
         this.packsMenuInfoSlot = packsMenuInfoSlot;
         this.packsMenuPreviewSlot = packsMenuPreviewSlot;
         this.packsMenuUnequipSlot = packsMenuUnequipSlot;
+        this.packsMenuPreviousSlot = packsMenuPreviousSlot;
+        this.packsMenuNextSlot = packsMenuNextSlot;
         this.nameplatesMenuBackSlot = nameplatesMenuBackSlot;
         this.nameplatesMenuUnequipSlot = nameplatesMenuUnequipSlot;
         this.nameplatesMenuPreviousSlot = nameplatesMenuPreviousSlot;
@@ -139,10 +145,12 @@ public class NameplateMenu {
     }
 
     public void open(Player player) {
-        openMainMenu(player);
+        playerCurrentPack.remove(player.getUniqueId());
+        playerPages.remove(player.getUniqueId());
+        openMainMenu(player, 0);
     }
 
-    private void openMainMenu(Player player) {
+    private void openMainMenu(Player player, int page) {
         // Очищаем текущий пакет игрока
         playerCurrentPack.remove(player.getUniqueId());
         playerPages.remove(player.getUniqueId());
@@ -173,11 +181,25 @@ public class NameplateMenu {
                 packsMenuRows
         );
 
-        // Добавляем пакеты в меню
-        int packIndex = 0;
-        for (String packName : packs) {
-            if (packIndex >= PACK_SLOTS.length) break;
+        int packsPerPage = PACK_SLOTS.length;
+        int totalPages = (int) Math.ceil((double) packs.size() / packsPerPage);
+        if (totalPages == 0) {
+            totalPages = 1;
+        }
+        if (page < 0) {
+            page = 0;
+        }
+        if (page >= totalPages) {
+            page = totalPages - 1;
+        }
+        playerPackMenuPages.put(player.getUniqueId(), page);
 
+        // Добавляем пакеты в меню
+        int startIndex = page * packsPerPage;
+        int endIndex = Math.min(startIndex + packsPerPage, packs.size());
+        int packIndex = 0;
+        for (int i = startIndex; i < endIndex; i++) {
+            String packName = packs.get(i);
             PackInfo packInfo = packInfoCache.get(packName);
             List<NameplateItem> packItems = packItemsCache.get(packName);
 
@@ -192,6 +214,15 @@ public class NameplateMenu {
 
         menu.setButton(packsMenuPreviewSlot, createPreviewCurrentButton(player));
         menu.setButton(packsMenuInfoSlot, createDonateInfoButton(player));
+
+        if (totalPages > 1) {
+            if (page > 0) {
+                menu.setButton(packsMenuPreviousSlot, createPacksPreviousPageButton(player, page - 1));
+            }
+            if (page < totalPages - 1) {
+                menu.setButton(packsMenuNextSlot, createPacksNextPageButton(player, page + 1));
+            }
+        }
 
         player.openInventory(menu.getInventory());
     }
@@ -286,6 +317,44 @@ public class NameplateMenu {
         }
     }
 
+    private SGButton createPacksPreviousPageButton(Player player, int newPage) {
+        ItemStack arrow = new ItemStack(Material.ARROW);
+        ItemMeta meta = arrow.getItemMeta();
+        if (meta != null) {
+            meta.setDisplayName(ChatColor.GREEN + "◀ Предыдущая страница");
+            meta.setLore(Arrays.asList(
+                    ChatColor.GRAY + "Нажмите, чтобы перейти",
+                    ChatColor.GRAY + "на предыдущую страницу"
+            ));
+            applyConfiguredButtonModel(meta, "packs-previous-page", "кнопки packs-previous-page");
+            arrow.setItemMeta(meta);
+        }
+
+        return new SGButton(arrow).withListener(ClickLimiter.wrapWithLimit(e -> {
+            e.setCancelled(true);
+            openMainMenu(player, newPage);
+        }));
+    }
+
+    private SGButton createPacksNextPageButton(Player player, int newPage) {
+        ItemStack arrow = new ItemStack(Material.ARROW);
+        ItemMeta meta = arrow.getItemMeta();
+        if (meta != null) {
+            meta.setDisplayName(ChatColor.GREEN + "Следующая страница ▶");
+            meta.setLore(Arrays.asList(
+                    ChatColor.GRAY + "Нажмите, чтобы перейти",
+                    ChatColor.GRAY + "на следующую страницу"
+            ));
+            applyConfiguredButtonModel(meta, "packs-next-page", "кнопки packs-next-page");
+            arrow.setItemMeta(meta);
+        }
+
+        return new SGButton(arrow).withListener(ClickLimiter.wrapWithLimit(e -> {
+            e.setCancelled(true);
+            openMainMenu(player, newPage);
+        }));
+    }
+
     private SGButton createDonateInfoButton(Player player) {
         ItemStack book = new ItemStack(Material.KNOWLEDGE_BOOK);
         ItemMeta meta = book.getItemMeta();
@@ -348,7 +417,7 @@ public class NameplateMenu {
 
         if (visibleItems.isEmpty()) {
             player.sendMessage(ChatColor.YELLOW + "В этом пакете нет доступных ников!");
-            openMainMenu(player);
+            openMainMenu(player, playerPackMenuPages.getOrDefault(player.getUniqueId(), 0));
             return;
         }
 
@@ -419,7 +488,7 @@ public class NameplateMenu {
 
         return new SGButton(arrow).withListener(ClickLimiter.wrapWithLimit(e -> {
             e.setCancelled(true);
-            openMainMenu(player);
+            openMainMenu(player, playerPackMenuPages.getOrDefault(player.getUniqueId(), 0));
         }));
     }
 

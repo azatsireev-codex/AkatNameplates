@@ -11,3 +11,5 @@ buttons:
   # previous-page: "minecraft:previous_page_button"
   # next-page: "minecraft:next_page_button"
   # unequip: "minecraft:unequip_button"
+  # packs-previous-page: "minecraft:packs_prev_button"
+  # packs-next-page: "minecraft:packs_next_button"

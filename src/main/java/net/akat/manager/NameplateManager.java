@@ -39,6 +39,8 @@ public class NameplateManager {
     private int packsMenuInfoSlot;
     private int packsMenuPreviewSlot;
     private int packsMenuUnequipSlot;
+    private int packsMenuPreviousSlot;
+    private int packsMenuNextSlot;
 
     private int nameplatesMenuBackSlot;
     private int nameplatesMenuUnequipSlot;
@@ -167,6 +169,12 @@ public class NameplateManager {
             packsMenuUnequipSlot = packsMenuSlotsSection != null
                     ? packsMenuSlotsSection.getInt("unequip", 30)
                     : 30;
+            packsMenuPreviousSlot = packsMenuSlotsSection != null
+                    ? packsMenuSlotsSection.getInt("previous", 29)
+                    : 29;
+            packsMenuNextSlot = packsMenuSlotsSection != null
+                    ? packsMenuSlotsSection.getInt("next", 33)
+                    : 33;
 
             ConfigurationSection nameplatesMenuSlotsSection = nameplatesMenuSection != null
                     ? nameplatesMenuSection.getConfigurationSection("slots")
@@ -208,6 +216,8 @@ public class NameplateManager {
             packsMenuInfoSlot = 31;
             packsMenuPreviewSlot = 32;
             packsMenuUnequipSlot = 30;
+            packsMenuPreviousSlot = 29;
+            packsMenuNextSlot = 33;
             nameplatesMenuBackSlot = 31;
             nameplatesMenuUnequipSlot = 30;
             nameplatesMenuPreviousSlot = 29;
@@ -471,6 +481,14 @@ public class NameplateManager {
 
     public int getPacksMenuUnequipSlot() {
         return packsMenuUnequipSlot;
+    }
+
+    public int getPacksMenuPreviousSlot() {
+        return packsMenuPreviousSlot;
+    }
+
+    public int getPacksMenuNextSlot() {
+        return packsMenuNextSlot;
     }
 
     public int getNameplatesMenuBackSlot() {
