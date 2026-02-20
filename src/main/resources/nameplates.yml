@@ -1,6 +1,14 @@
 menu:
-  title: "&8Купить ник"
-  rows: 6
+  title: "&8Купить ник" # legacy fallback
+  rows: 6 # legacy fallback
+
+  packs-menu:
+    title: "&8Купить ник"
+    rows: 4
+
+  nameplates-menu:
+    title: "&8Пакет: {pack} &7(&f{currentPage}/{totalPages}&7)"
+    rows: 6
 
 nameplates:
   angel:

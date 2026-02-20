@@ -35,8 +35,10 @@ public class NameplateMenu {
     private final SpiGUI spiGUI;
     private final List<NameplateItem> allItems;
     private final LuckPerms luckPerms;
-    private final String menuTitle;
-    private final int menuRows;
+    private final String packsMenuTitle;
+    private final int packsMenuRows;
+    private final String nameplatesMenuTitle;
+    private final int nameplatesMenuRows;
     private final NameplateActions actions;
     private final Map<String, String> packModels;
     private final Map<String, String> buttonModels;
@@ -82,13 +84,17 @@ public class NameplateMenu {
     }
 
     public NameplateMenu(SpiGUI spiGUI, List<NameplateItem> items,
-                         String menuTitle, int menuRows, NameplateActions actions,
+                         String packsMenuTitle, int packsMenuRows,
+                         String nameplatesMenuTitle, int nameplatesMenuRows,
+                         NameplateActions actions,
                          Map<String, String> packModels, Map<String, String> buttonModels) {
         this.spiGUI = spiGUI;
         this.allItems = items;
         this.luckPerms = LuckPermsProvider.get();
-        this.menuTitle = menuTitle;
-        this.menuRows = menuRows;
+        this.packsMenuTitle = packsMenuTitle;
+        this.packsMenuRows = packsMenuRows;
+        this.nameplatesMenuTitle = nameplatesMenuTitle;
+        this.nameplatesMenuRows = nameplatesMenuRows;
         this.actions = actions;
         this.packModels = new HashMap<>(packModels);
         this.buttonModels = new HashMap<>(buttonModels);
@@ -151,8 +157,8 @@ public class NameplateMenu {
 
         // Создаем главное меню
         SGMenu menu = spiGUI.create(
-                ChatColor.translateAlternateColorCodes('&', menuTitle),
-                menuRows
+                ChatColor.translateAlternateColorCodes('&', packsMenuTitle),
+                packsMenuRows
         );
 
         // Добавляем пакеты в меню
@@ -351,8 +357,12 @@ public class NameplateMenu {
         if (totalPages == 0) page = 0;
 
         playerPages.put(player.getUniqueId(), page);
-        String title = "§8Пакет: " + packName + " §7(§f" + (page + 1) + "/" + totalPages + "§7)";
-        SGMenu menu = spiGUI.create(title, menuRows);
+        String title = nameplatesMenuTitle
+                .replace("{pack}", packName)
+                .replace("{currentPage}", String.valueOf(page + 1))
+                .replace("{totalPages}", String.valueOf(totalPages));
+        title = ChatColor.translateAlternateColorCodes('&', title);
+        SGMenu menu = spiGUI.create(title, nameplatesMenuRows);
 
         int startIndex = page * itemsPerPage;
         int endIndex = Math.min(startIndex + itemsPerPage, visibleItems.size());

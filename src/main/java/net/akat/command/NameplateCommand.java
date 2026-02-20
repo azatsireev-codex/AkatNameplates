@@ -123,8 +123,10 @@ public class NameplateCommand implements CommandExecutor, TabCompleter {
             purchaseMenu = new NameplateMenu(
                     spiGUI,
                     manager.getNameplates(),
-                    manager.getMenuTitle(),
-                    manager.getMenuRows(),
+                    manager.getPacksMenuTitle(),
+                    manager.getPacksMenuRows(),
+                    manager.getNameplatesMenuTitle(),
+                    manager.getNameplatesMenuRows(),
                     actions,
                     manager.getPackModels(),
                     manager.getButtonModels()

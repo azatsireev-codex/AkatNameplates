@@ -31,8 +31,10 @@ public class NameplateManager {
     private final Map<String, PackItem> packs = new HashMap<>(); // Новое поле для пакетов
     private final Map<String, String> packModels = new HashMap<>();
     private final Map<String, String> buttonModels = new HashMap<>();
-    private String menuTitle;
-    private int menuRows;
+    private String packsMenuTitle;
+    private int packsMenuRows;
+    private String nameplatesMenuTitle;
+    private int nameplatesMenuRows;
 
     // Класс для хранения информации о пакете
     public static class PackItem {
@@ -122,10 +124,27 @@ public class NameplateManager {
         // Загружаем настройки меню
         ConfigurationSection menuSection = config.getConfigurationSection("menu");
         if (menuSection != null) {
-            menuTitle = menuSection.getString("title", "&6&lВыбор ника");
-            menuRows = menuSection.getInt("rows", 3);
-            // Ограничиваем rows от 1 до 6
-            menuRows = Math.max(1, Math.min(6, menuRows));
+            String legacyTitle = menuSection.getString("title", "&6&lВыбор ника");
+            int legacyRows = menuSection.getInt("rows", 3);
+            legacyRows = Math.max(1, Math.min(6, legacyRows));
+
+            ConfigurationSection packsMenuSection = menuSection.getConfigurationSection("packs-menu");
+            packsMenuTitle = packsMenuSection != null
+                    ? packsMenuSection.getString("title", legacyTitle)
+                    : legacyTitle;
+            packsMenuRows = packsMenuSection != null
+                    ? packsMenuSection.getInt("rows", legacyRows)
+                    : legacyRows;
+            packsMenuRows = Math.max(1, Math.min(6, packsMenuRows));
+
+            ConfigurationSection nameplatesMenuSection = menuSection.getConfigurationSection("nameplates-menu");
+            nameplatesMenuTitle = nameplatesMenuSection != null
+                    ? nameplatesMenuSection.getString("title", "§8Пакет: {pack} §7(§f{currentPage}/{totalPages}§7)")
+                    : "§8Пакет: {pack} §7(§f{currentPage}/{totalPages}§7)";
+            nameplatesMenuRows = nameplatesMenuSection != null
+                    ? nameplatesMenuSection.getInt("rows", legacyRows)
+                    : legacyRows;
+            nameplatesMenuRows = Math.max(1, Math.min(6, nameplatesMenuRows));
 
             // Загружаем пакеты из конфига
             ConfigurationSection packsSection = menuSection.getConfigurationSection("packs");
@@ -144,8 +163,10 @@ public class NameplateManager {
                 }
             }
         } else {
-            menuTitle = "&6&lВыбор ника";
-            menuRows = 3;
+            packsMenuTitle = "&6&lВыбор ника";
+            packsMenuRows = 3;
+            nameplatesMenuTitle = "§8Пакет: {pack} §7(§f{currentPage}/{totalPages}§7)";
+            nameplatesMenuRows = 3;
         }
 
         // Загружаем таблички
@@ -378,12 +399,20 @@ public class NameplateManager {
         return nameplates.get(id);
     }
 
-    public String getMenuTitle() {
-        return menuTitle;
+    public String getPacksMenuTitle() {
+        return packsMenuTitle;
     }
 
-    public int getMenuRows() {
-        return menuRows;
+    public int getPacksMenuRows() {
+        return packsMenuRows;
+    }
+
+    public String getNameplatesMenuTitle() {
+        return nameplatesMenuTitle;
+    }
+
+    public int getNameplatesMenuRows() {
+        return nameplatesMenuRows;
     }
 
     public Map<String, String> getPackModels() {
