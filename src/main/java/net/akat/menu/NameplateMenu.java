@@ -230,8 +230,7 @@ public class NameplateMenu {
             int newItemsCount = countNewItems(packItems);
             String displayName = ChatColor.YELLOW + packInfo.name;
             if (newItemsCount > 0) {
-                displayName = displayName + ChatColor.GRAY + " " + ChatColor.GOLD + newItemsCount
-                        + ChatColor.WHITE + "\uE063";
+                displayName = displayName + ChatColor.GRAY + " " + ChatColor.WHITE + "\uE063";
             }
             meta.setDisplayName(displayName);
 
@@ -253,7 +252,6 @@ public class NameplateMenu {
                 }
             }
 
-            lore.add("§7Всего ников: §a" + totalItems);
             lore.add("§7Куплено: §e" + purchasedItems + "§7/§a" + totalItems);
             lore.add(" ");
             // Процент заполнения
@@ -373,6 +371,7 @@ public class NameplateMenu {
 
         return new SGButton(book).withListener(ClickLimiter.wrapWithLimit(e -> {
             e.setCancelled(true);
+            player.closeInventory();
 
             TextComponent link = new TextComponent(ChatColor.GREEN + "Открыть страницу доната");
             link.setClickEvent(new ClickEvent(ClickEvent.Action.OPEN_URL, donateUrl));
