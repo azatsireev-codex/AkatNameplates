@@ -14,17 +14,22 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.List;
+import java.util.Set;
 import java.util.logging.Level;
 import java.util.stream.Collectors;
 
 public class NameplateManager {
     private final JavaPlugin plugin;
     private File configFile;
+    private File packConfigFile;
     private FileConfiguration config;
+    private FileConfiguration packConfig;
     private final Map<String, NameplateItem> nameplates = new HashMap<>();
     private final Map<String, PackItem> packs = new HashMap<>(); // Новое поле для пакетов
+    private final Map<String, Integer> packModelData = new HashMap<>();
     private String menuTitle;
     private int menuRows;
 
@@ -101,12 +106,17 @@ public class NameplateManager {
         }
 
         config = YamlConfiguration.loadConfiguration(configFile);
+
+        packConfigFile = new File(plugin.getDataFolder(), "pack.yml");
+        initializePackConfig(collectPackNamesFromNameplatesConfig());
+
         reloadNameplates();
     }
 
     public void reloadNameplates() {
         nameplates.clear();
         packs.clear(); // Очищаем пакеты
+        Set<String> usedPackNames = new LinkedHashSet<>();
 
         // Загружаем настройки меню
         ConfigurationSection menuSection = config.getConfigurationSection("menu");
@@ -148,6 +158,7 @@ public class NameplateManager {
 
                         // Добавляем ники в соответствующие пакеты
                         if (item.hasPack()) {
+                            usedPackNames.add(item.getPack());
                             PackItem pack = packs.get(item.getPack());
                             if (pack != null) {
                                 pack.addItem(item);
@@ -160,9 +171,99 @@ public class NameplateManager {
             }
         }
 
+        ensurePackConfigContains(usedPackNames);
+        loadPackModelData(usedPackNames);
+
         plugin.getLogger().info("Загружено " + nameplates.size() + " ников и " + packs.size() + " пакетов");
     }
 
+
+    private Set<String> collectPackNamesFromNameplatesConfig() {
+        Set<String> packNames = new LinkedHashSet<>();
+        ConfigurationSection nameplatesSection = config.getConfigurationSection("nameplates");
+        if (nameplatesSection == null) {
+            return packNames;
+        }
+
+        for (String key : nameplatesSection.getKeys(false)) {
+            ConfigurationSection itemSection = nameplatesSection.getConfigurationSection(key);
+            if (itemSection == null) {
+                continue;
+            }
+
+            String packName = itemSection.getString("pack", "").trim();
+            if (!packName.isEmpty()) {
+                packNames.add(packName);
+            }
+        }
+
+        return packNames;
+    }
+
+    private void initializePackConfig(Set<String> packNames) {
+        if (!packConfigFile.exists()) {
+            YamlConfiguration newPackConfig = new YamlConfiguration();
+            ConfigurationSection packsSection = newPackConfig.createSection("packs");
+            for (String packName : packNames) {
+                packsSection.createSection(packName);
+            }
+
+            try {
+                newPackConfig.save(packConfigFile);
+                plugin.getLogger().info("Создан новый файл конфигурации pack.yml");
+            } catch (IOException e) {
+                plugin.getLogger().log(Level.SEVERE, "Не удалось создать pack.yml", e);
+            }
+        }
+
+        packConfig = YamlConfiguration.loadConfiguration(packConfigFile);
+    }
+
+    private void ensurePackConfigContains(Set<String> packNames) {
+        if (packConfig == null) {
+            packConfig = YamlConfiguration.loadConfiguration(packConfigFile);
+        }
+
+        ConfigurationSection packsSection = packConfig.getConfigurationSection("packs");
+        if (packsSection == null) {
+            packsSection = packConfig.createSection("packs");
+        }
+
+        boolean changed = false;
+        for (String packName : packNames) {
+            if (!packsSection.contains(packName)) {
+                packsSection.createSection(packName);
+                changed = true;
+            }
+        }
+
+        if (changed) {
+            try {
+                packConfig.save(packConfigFile);
+            } catch (IOException e) {
+                plugin.getLogger().log(Level.SEVERE, "Не удалось сохранить pack.yml", e);
+            }
+        }
+    }
+
+    private void loadPackModelData(Set<String> packNames) {
+        packModelData.clear();
+        if (packConfig == null) {
+            packConfig = YamlConfiguration.loadConfiguration(packConfigFile);
+        }
+
+        for (String packName : packNames) {
+            ConfigurationSection packSection = packConfig.getConfigurationSection("packs." + packName);
+            if (packSection == null || !packSection.contains("model-data")) {
+                continue;
+            }
+
+            int modelData = packSection.getInt("model-data", -1);
+            if (modelData > 0) {
+                packModelData.put(packName, modelData);
+            }
+        }
+    }
     private NameplateItem loadNameplateItem(String id, ConfigurationSection section) {
         try {
             String materialStr = section.getString("material", "NAME_TAG");
@@ -210,6 +311,7 @@ public class NameplateManager {
     public boolean reloadConfig() {
         try {
             config = YamlConfiguration.loadConfiguration(configFile);
+            packConfig = YamlConfiguration.loadConfiguration(packConfigFile);
             reloadNameplates();
             return true;
         } catch (Exception e) {
@@ -256,5 +358,9 @@ public class NameplateManager {
 
     public int getMenuRows() {
         return menuRows;
+    }
+
+    public Map<String, Integer> getPackModelData() {
+        return new HashMap<>(packModelData);
     }
 }

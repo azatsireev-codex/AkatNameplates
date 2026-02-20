@@ -38,6 +38,7 @@ public class NameplateMenu {
     private final String menuTitle;
     private final int menuRows;
     private final NameplateActions actions;
+    private final Map<String, Integer> packModelData;
 
     private static final int PREVIOUS_PAGE_SLOT = 45;
     private static final int NEXT_PAGE_SLOT = 53;
@@ -69,22 +70,26 @@ public class NameplateMenu {
         final String name;
         final Material material;
         final List<String> lore;
+        final Integer modelData;
 
-        PackInfo(String name, Material material, List<String> lore) {
+        PackInfo(String name, Material material, List<String> lore, Integer modelData) {
             this.name = name;
             this.material = material;
             this.lore = lore;
+            this.modelData = modelData;
         }
     }
 
     public NameplateMenu(SpiGUI spiGUI, List<NameplateItem> items,
-                         String menuTitle, int menuRows, NameplateActions actions) {
+                         String menuTitle, int menuRows, NameplateActions actions,
+                         Map<String, Integer> packModelData) {
         this.spiGUI = spiGUI;
         this.allItems = items;
         this.luckPerms = LuckPermsProvider.get();
         this.menuTitle = menuTitle;
         this.menuRows = menuRows;
         this.actions = actions;
+        this.packModelData = new HashMap<>(packModelData);
 
         initPackCache();
     }
@@ -104,11 +109,11 @@ public class NameplateMenu {
 
             // Если это первый ники в пакете, создаем базовую информацию о пакете
             if (!packInfoCache.containsKey(packName)) {
-                Material material = item.getMaterial() != Material.NAME_TAG ?
-                        item.getMaterial() : Material.CHEST;
+                Material material = Material.CHEST;
                 List<String> lore = new ArrayList<>();
+                Integer modelData = packModelData.get(packName);
 
-                packInfoCache.put(packName, new PackInfo(packName, material, lore));
+                packInfoCache.put(packName, new PackInfo(packName, material, lore, modelData));
             }
         }
     }
@@ -196,6 +201,9 @@ public class NameplateMenu {
             lore.add("§eНажмите для просмотра");
 
             meta.setLore(lore);
+            if (packInfo.modelData != null) {
+                meta.setCustomModelData(packInfo.modelData);
+            }
             stack.setItemMeta(meta);
         }
 
