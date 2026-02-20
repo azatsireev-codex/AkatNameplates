@@ -17,6 +17,8 @@ import net.luckperms.api.LuckPermsProvider;
 import net.luckperms.api.model.user.User;
 import net.luckperms.api.node.Node;
 import net.md_5.bungee.api.ChatColor;
+import net.md_5.bungee.api.chat.ClickEvent;
+import net.md_5.bungee.api.chat.TextComponent;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
@@ -43,6 +45,8 @@ public class NameplateMenu {
     private static final int EQUIP_ALL_BUTTON_SLOT = 48;
     private static final int UNEQUIP_SLOT_MAIN = 48;
     private static final int CURRENT_NICK_SLOT = 50;
+    private static final int DONATE_INFO_SLOT = 52;
+    private static final String DONATE_URL = "https://neft.games/donate";
 
     private static final int[] PACK_SLOTS = {
             10, 11, 12, 13, 14, 15, 16,
@@ -145,6 +149,7 @@ public class NameplateMenu {
         }
 
         menu.setButton(CURRENT_NICK_SLOT, createPreviewCurrentButton(player));
+        menu.setButton(DONATE_INFO_SLOT, createDonateInfoButton(player));
 
         player.openInventory(menu.getInventory());
     }
@@ -208,6 +213,39 @@ public class NameplateMenu {
             }
         }
         return count;
+    }
+
+    private SGButton createDonateInfoButton(Player player) {
+        ItemStack book = new ItemStack(Material.KNOWLEDGE_BOOK);
+        ItemMeta meta = book.getItemMeta();
+
+        if (meta != null) {
+            meta.setDisplayName(ChatColor.AQUA + "Информация о донат-валюте");
+            meta.setLore(Arrays.asList(
+                    ChatColor.GRAY + "1 нефткоин " + ChatColor.WHITE + "\uE058" + ChatColor.GRAY + " = 1 рубль",
+                    ChatColor.GRAY + "Пополнить баланс можно на сайте",
+                    ChatColor.YELLOW + DONATE_URL,
+                    "",
+                    ChatColor.GRAY + "Кастомные ники видны над головой",
+                    ChatColor.GRAY + "почти на всех режимах",
+                    ChatColor.GRAY + "и выдаются навсегда после покупки",
+                    "",
+                    ChatColor.GREEN + "Нажмите, чтобы открыть сайт"
+            ));
+            book.setItemMeta(meta);
+        }
+
+        return new SGButton(book).withListener(ClickLimiter.wrapWithLimit(e -> {
+            e.setCancelled(true);
+
+            TextComponent link = new TextComponent(ChatColor.GREEN + "[Открыть страницу доната]");
+            link.setClickEvent(new ClickEvent(ClickEvent.Action.OPEN_URL, DONATE_URL));
+
+            player.sendMessage(ChatColor.YELLOW + "1 нефткоин " + ChatColor.WHITE + "\uE058" + ChatColor.YELLOW + " = 1 рубль.");
+            player.sendMessage(ChatColor.YELLOW + "Пополнить баланс: " + DONATE_URL);
+            player.sendMessage(ChatColor.YELLOW + "Кастомные ники отображаются над головой почти на всех режимах и выдаются навсегда.");
+            player.spigot().sendMessage(link);
+        }));
     }
 
     private SGButton createPreviewCurrentButton(Player player) {
