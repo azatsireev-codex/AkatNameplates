@@ -33,6 +33,7 @@ public class NameplateManager {
     private final Map<String, PackItem> packs = new HashMap<>(); // Новое поле для пакетов
     private final Map<String, String> packModels = new HashMap<>();
     private final Map<String, String> buttonModels = new HashMap<>();
+    private final Set<String> packsAfterGeneral = new LinkedHashSet<>();
     private String packsMenuTitle;
     private int packsMenuRows;
     private String nameplatesMenuTitle;
@@ -289,6 +290,7 @@ public class NameplateManager {
 
         ensurePackConfigContains(usedPackNames);
         loadPackModels(usedPackNames);
+        loadPacksAfterGeneral(usedPackNames);
         loadButtonModels();
 
         plugin.getLogger().info("Загружено " + nameplates.size() + " ников и " + packs.size() + " пакетов");
@@ -399,6 +401,24 @@ public class NameplateManager {
             String model = buttonsSection.getString(key, "").trim();
             if (!model.isEmpty()) {
                 buttonModels.put(key, model);
+            }
+        }
+    }
+
+    private void loadPacksAfterGeneral(Set<String> packNames) {
+        packsAfterGeneral.clear();
+        if (packConfig == null) {
+            packConfig = YamlConfiguration.loadConfiguration(packConfigFile);
+        }
+
+        for (String packName : packNames) {
+            ConfigurationSection packSection = packConfig.getConfigurationSection("packs." + packName);
+            if (packSection == null) {
+                continue;
+            }
+
+            if (packSection.getBoolean("after-general", false)) {
+                packsAfterGeneral.add(packName);
             }
         }
     }
@@ -562,5 +582,9 @@ public class NameplateManager {
 
     public Map<String, String> getButtonModels() {
         return new HashMap<>(buttonModels);
+    }
+
+    public Set<String> getPacksAfterGeneral() {
+        return new LinkedHashSet<>(packsAfterGeneral);
     }
 }

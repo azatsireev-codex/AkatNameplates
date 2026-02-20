@@ -2,6 +2,7 @@ packs:
   # Пример:
   # "Мистика":
   #   model: "minecraft:your_model_key"
+  #   after-general: true # Показывать этот пак сразу после пакета "Общие"
 
 buttons:
   # Модели для кнопок меню паков (формат namespace:key)

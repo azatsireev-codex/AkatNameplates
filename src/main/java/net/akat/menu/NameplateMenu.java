@@ -42,6 +42,7 @@ public class NameplateMenu {
     private final NameplateActions actions;
     private final Map<String, String> packModels;
     private final Map<String, String> buttonModels;
+    private final Set<String> packsAfterGeneral;
 
     private final int packsMenuInfoSlot;
     private final int packsMenuPreviewSlot;
@@ -88,7 +89,8 @@ public class NameplateMenu {
                          int nameplatesMenuPreviousSlot, int nameplatesMenuNextSlot,
                          String donateUrl, List<Integer> packSlots, List<Integer> itemSlots,
                          NameplateActions actions,
-                         Map<String, String> packModels, Map<String, String> buttonModels) {
+                         Map<String, String> packModels, Map<String, String> buttonModels,
+                         Set<String> packsAfterGeneral) {
         this.spiGUI = spiGUI;
         this.allItems = items;
         this.luckPerms = LuckPermsProvider.get();
@@ -111,6 +113,7 @@ public class NameplateMenu {
         this.actions = actions;
         this.packModels = new HashMap<>(packModels);
         this.buttonModels = new HashMap<>(buttonModels);
+        this.packsAfterGeneral = new LinkedHashSet<>(packsAfterGeneral);
 
         initPackCache();
     }
@@ -151,13 +154,24 @@ public class NameplateMenu {
         playerPages.remove(player.getUniqueId());
 
         // Получаем список уникальных пакетов
-        List<String> packs = new ArrayList<>(packItemsCache.keySet());
-        packs.sort((left, right) -> {
-            if (left.equalsIgnoreCase("Общие")) {
-                return 1;
+        List<String> packs = new ArrayList<>();
+        for (String packName : packItemsCache.keySet()) {
+            List<NameplateItem> packItems = packItemsCache.getOrDefault(packName, Collections.emptyList());
+            if (packHasVisibleItemsForPlayer(player, packItems)) {
+                packs.add(packName);
             }
-            if (right.equalsIgnoreCase("Общие")) {
-                return -1;
+        }
+
+        packs.sort((left, right) -> {
+            boolean leftAfterGeneral = packsAfterGeneral.contains(left);
+            boolean rightAfterGeneral = packsAfterGeneral.contains(right);
+            boolean leftIsGeneral = left.equalsIgnoreCase("Общие");
+            boolean rightIsGeneral = right.equalsIgnoreCase("Общие");
+
+            int leftGroup = leftIsGeneral ? 0 : (leftAfterGeneral ? 1 : 2);
+            int rightGroup = rightIsGeneral ? 0 : (rightAfterGeneral ? 1 : 2);
+            if (leftGroup != rightGroup) {
+                return Integer.compare(leftGroup, rightGroup);
             }
 
             int leftCount = packItemsCache.getOrDefault(left, Collections.emptyList()).size();
@@ -560,6 +574,21 @@ public class NameplateMenu {
         }
 
         return visible;
+    }
+
+    private boolean packHasVisibleItemsForPlayer(Player player, List<NameplateItem> packItems) {
+        for (NameplateItem item : packItems) {
+            if (item.isHiddenInShop()) {
+                if (item.hasPermission() && hasPurchasedItem(player, item)) {
+                    return true;
+                }
+                continue;
+            }
+
+            return true;
+        }
+
+        return false;
     }
 
     private boolean itemIsPurchased(Player player, NameplateItem item) {

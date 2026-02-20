@@ -141,7 +141,8 @@ public class NameplateCommand implements CommandExecutor, TabCompleter {
                     manager.getNameplatesMenuItemSlots(),
                     actions,
                     manager.getPackModels(),
-                    manager.getButtonModels()
+                    manager.getButtonModels(),
+                    manager.getPacksAfterGeneral()
             );
 
             sender.sendMessage(ChatColor.GREEN + "Конфигурация ников перезагружена!");
