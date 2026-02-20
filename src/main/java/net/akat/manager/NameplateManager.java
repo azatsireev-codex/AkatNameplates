@@ -164,6 +164,8 @@ public class NameplateManager {
                             if (pack != null) {
                                 pack.addItem(item);
                             }
+                        } else {
+                            usedPackNames.add("Общие");
                         }
                     }
                 } catch (Exception e) {
@@ -196,6 +198,8 @@ public class NameplateManager {
             String packName = itemSection.getString("pack", "").trim();
             if (!packName.isEmpty()) {
                 packNames.add(packName);
+            } else {
+                packNames.add("Общие");
             }
         }
 
