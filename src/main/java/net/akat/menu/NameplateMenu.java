@@ -129,6 +129,23 @@ public class NameplateMenu {
 
         // Получаем список уникальных пакетов
         List<String> packs = new ArrayList<>(packItemsCache.keySet());
+        packs.sort((left, right) -> {
+            if (left.equalsIgnoreCase("Общие")) {
+                return 1;
+            }
+            if (right.equalsIgnoreCase("Общие")) {
+                return -1;
+            }
+
+            int leftCount = packItemsCache.getOrDefault(left, Collections.emptyList()).size();
+            int rightCount = packItemsCache.getOrDefault(right, Collections.emptyList()).size();
+
+            int byCount = Integer.compare(rightCount, leftCount);
+            if (byCount != 0) {
+                return byCount;
+            }
+            return left.compareToIgnoreCase(right);
+        });
 
         // Создаем главное меню
         SGMenu menu = spiGUI.create(
