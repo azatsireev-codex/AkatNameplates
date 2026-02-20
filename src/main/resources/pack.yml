@@ -2,3 +2,12 @@ packs:
   # Пример:
   # "Мистика":
   #   model: "minecraft:your_model_key"
+
+buttons:
+  # Модели для кнопок меню паков (формат namespace:key)
+  # donate-info: "minecraft:donate_button"
+  # preview-current: "minecraft:preview_current_button"
+  # back: "minecraft:back_button"
+  # previous-page: "minecraft:previous_page_button"
+  # next-page: "minecraft:next_page_button"
+  # unequip: "minecraft:unequip_button"

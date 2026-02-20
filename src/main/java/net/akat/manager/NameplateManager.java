@@ -30,6 +30,7 @@ public class NameplateManager {
     private final Map<String, NameplateItem> nameplates = new HashMap<>();
     private final Map<String, PackItem> packs = new HashMap<>(); // Новое поле для пакетов
     private final Map<String, String> packModels = new HashMap<>();
+    private final Map<String, String> buttonModels = new HashMap<>();
     private String menuTitle;
     private int menuRows;
 
@@ -173,6 +174,7 @@ public class NameplateManager {
 
         ensurePackConfigContains(usedPackNames);
         loadPackModels(usedPackNames);
+        loadButtonModels();
 
         plugin.getLogger().info("Загружено " + nameplates.size() + " ников и " + packs.size() + " пакетов");
     }
@@ -264,6 +266,26 @@ public class NameplateManager {
             }
         }
     }
+
+    private void loadButtonModels() {
+        buttonModels.clear();
+        if (packConfig == null) {
+            packConfig = YamlConfiguration.loadConfiguration(packConfigFile);
+        }
+
+        ConfigurationSection buttonsSection = packConfig.getConfigurationSection("buttons");
+        if (buttonsSection == null) {
+            return;
+        }
+
+        for (String key : buttonsSection.getKeys(false)) {
+            String model = buttonsSection.getString(key, "").trim();
+            if (!model.isEmpty()) {
+                buttonModels.put(key, model);
+            }
+        }
+    }
+
     private NameplateItem loadNameplateItem(String id, ConfigurationSection section) {
         try {
             String materialStr = section.getString("material", "NAME_TAG");
@@ -362,5 +384,9 @@ public class NameplateManager {
 
     public Map<String, String> getPackModels() {
         return new HashMap<>(packModels);
+    }
+
+    public Map<String, String> getButtonModels() {
+        return new HashMap<>(buttonModels);
     }
 }

@@ -39,6 +39,7 @@ public class NameplateMenu {
     private final int menuRows;
     private final NameplateActions actions;
     private final Map<String, String> packModels;
+    private final Map<String, String> buttonModels;
 
     private static final int PREVIOUS_PAGE_SLOT = 45;
     private static final int NEXT_PAGE_SLOT = 53;
@@ -82,7 +83,7 @@ public class NameplateMenu {
 
     public NameplateMenu(SpiGUI spiGUI, List<NameplateItem> items,
                          String menuTitle, int menuRows, NameplateActions actions,
-                         Map<String, String> packModels) {
+                         Map<String, String> packModels, Map<String, String> buttonModels) {
         this.spiGUI = spiGUI;
         this.allItems = items;
         this.luckPerms = LuckPermsProvider.get();
@@ -90,6 +91,7 @@ public class NameplateMenu {
         this.menuRows = menuRows;
         this.actions = actions;
         this.packModels = new HashMap<>(packModels);
+        this.buttonModels = new HashMap<>(buttonModels);
 
         initPackCache();
     }
@@ -218,21 +220,7 @@ public class NameplateMenu {
             lore.add("§eНажмите для просмотра");
 
             meta.setLore(lore);
-            if (packInfo.model != null && !packInfo.model.isEmpty()) {
-                try {
-                    String[] parts = packInfo.model.split(":", 2);
-                    if (parts.length == 2) {
-                        NamespacedKey modelKey = new NamespacedKey(parts[0], parts[1]);
-                        try {
-                            meta.setItemModel(modelKey);
-                        } catch (NoSuchMethodError e) {
-                            Bukkit.getLogger().warning("Кастомные модели паков не поддерживаются в этой версии Minecraft");
-                        }
-                    }
-                } catch (Exception e) {
-                    Bukkit.getLogger().warning("Ошибка при установке модели для пака " + packInfo.name + ": " + e.getMessage());
-                }
-            }
+            applyModel(meta, packInfo.model, "пака " + packInfo.name);
             stack.setItemMeta(meta);
         }
 
@@ -252,6 +240,34 @@ public class NameplateMenu {
         return count;
     }
 
+    private void applyConfiguredButtonModel(ItemMeta meta, String buttonKey, String buttonName) {
+        String model = buttonModels.get(buttonKey);
+        applyModel(meta, model, buttonName);
+    }
+
+    private void applyModel(ItemMeta meta, String model, String targetName) {
+        if (model == null || model.isEmpty()) {
+            return;
+        }
+
+        try {
+            String[] parts = model.split(":", 2);
+            if (parts.length != 2) {
+                Bukkit.getLogger().warning("Некорректный формат модели для " + targetName + ": " + model);
+                return;
+            }
+
+            NamespacedKey modelKey = new NamespacedKey(parts[0], parts[1]);
+            try {
+                meta.setItemModel(modelKey);
+            } catch (NoSuchMethodError e) {
+                Bukkit.getLogger().warning("Кастомные модели не поддерживаются в этой версии Minecraft");
+            }
+        } catch (Exception e) {
+            Bukkit.getLogger().warning("Ошибка при установке модели для " + targetName + ": " + e.getMessage());
+        }
+    }
+
     private SGButton createDonateInfoButton(Player player) {
         ItemStack book = new ItemStack(Material.KNOWLEDGE_BOOK);
         ItemMeta meta = book.getItemMeta();
@@ -269,6 +285,7 @@ public class NameplateMenu {
                     "",
                     ChatColor.GREEN + "Нажмите, чтобы открыть сайт."
             ));
+            applyConfiguredButtonModel(meta, "donate-info", "кнопки donate-info");
             book.setItemMeta(meta);
         }
 
@@ -296,6 +313,7 @@ public class NameplateMenu {
             lore.add(ChatColor.YELLOW + "Включит предпросмотр ника");
 
             meta.setLore(lore);
+            applyConfiguredButtonModel(meta, "preview-current", "кнопки preview-current");
             eye.setItemMeta(meta);
         }
 
@@ -373,6 +391,7 @@ public class NameplateMenu {
                     ChatColor.GRAY + "Нажмите, чтобы вернуться",
                     ChatColor.GRAY + "к выбору пакетов"
             ));
+            applyConfiguredButtonModel(meta, "back", "кнопки back");
             arrow.setItemMeta(meta);
         }
 
@@ -391,6 +410,7 @@ public class NameplateMenu {
                     ChatColor.GRAY + "Нажмите, чтобы перейти",
                     ChatColor.GRAY + "на предыдущую страницу"
             ));
+            applyConfiguredButtonModel(meta, "previous-page", "кнопки previous-page");
             arrow.setItemMeta(meta);
         }
 
@@ -409,6 +429,7 @@ public class NameplateMenu {
                     ChatColor.GRAY + "Нажмите, чтобы перейти",
                     ChatColor.GRAY + "на следующую страницу"
             ));
+            applyConfiguredButtonModel(meta, "next-page", "кнопки next-page");
             arrow.setItemMeta(meta);
         }
 
@@ -429,6 +450,7 @@ public class NameplateMenu {
                     "",
                     ChatColor.YELLOW + "Удалит эффекты текущего ника"
             ));
+            applyConfiguredButtonModel(meta, "unequip", "кнопки unequip");
             barrier.setItemMeta(meta);
         }
 
