@@ -42,15 +42,34 @@ public class NameplatesPlugin extends JavaPlugin {
         this.actions = new NameplateActions(balanceClient, ownership);
 
         var nameplateItems = manager.getNameplates();
-        var menuTitle = manager.getMenuTitle();
-        var menuRows = manager.getMenuRows();
+        var packsMenuTitle = manager.getPacksMenuTitle();
+        var packsMenuRows = manager.getPacksMenuRows();
+        var nameplatesMenuTitle = manager.getNameplatesMenuTitle();
+        var nameplatesMenuRows = manager.getNameplatesMenuRows();
 
         this.purchaseMenu = new NameplateMenu(
                 spiGUI,
                 nameplateItems,
-                menuTitle,
-                menuRows,
-                actions
+                packsMenuTitle,
+                packsMenuRows,
+                nameplatesMenuTitle,
+                nameplatesMenuRows,
+                manager.getPacksMenuInfoSlot(),
+                manager.getPacksMenuPreviewSlot(),
+                manager.getPacksMenuUnequipSlot(),
+                manager.getPacksMenuPreviousSlot(),
+                manager.getPacksMenuNextSlot(),
+                manager.getNameplatesMenuBackSlot(),
+                manager.getNameplatesMenuUnequipSlot(),
+                manager.getNameplatesMenuPreviousSlot(),
+                manager.getNameplatesMenuNextSlot(),
+                manager.getDonateUrl(),
+                manager.getPacksMenuPackSlots(),
+                manager.getNameplatesMenuItemSlots(),
+                actions,
+                manager.getPackModels(),
+                manager.getButtonModels(),
+                manager.getPacksAfterGeneral()
         );
 
         getCommand("confirm").setExecutor(new ConfirmationCommandHandler());

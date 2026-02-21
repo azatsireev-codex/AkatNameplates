@@ -15,7 +15,9 @@ public class NameplateActions {
     private final BalanceHttpClient balance;
     private final NameplateOwnershipService ownership;
     private final Map<UUID, Long> lastPreviewTime = new HashMap<>();
-    private static final long COOLDOWN_MS = 3000;
+    private final Map<UUID, Long> lastPreviewCurrentTime = new HashMap<>();
+    private static final long COOLDOWN_MS = 5000;
+    private static final long PREVIEW_CURRENT_COOLDOWN_MS = 10000;
 
     public NameplateActions(BalanceHttpClient balance, NameplateOwnershipService ownership) {
         this.balance = balance;
@@ -39,10 +41,11 @@ public class NameplateActions {
     }
 
     public void previewCurrent(Player player) {
-        if (checkCooldown(player)) {
-            player.sendMessage(ChatColor.RED + "Подождите " + formatCooldown(player) + " секунд перед следующим предпросмотром!");
+        if (checkPreviewCurrentCooldown(player)) {
+            player.sendMessage(ChatColor.RED + "Подождите " + formatPreviewCurrentCooldown(player) + " секунд перед следующим предпросмотром текущего ника!");
             return;
         }
+
 
         player.closeInventory();
         Bukkit.getGlobalRegionScheduler().run(NameplatesPlugin.getInstance(), t -> {
@@ -103,7 +106,9 @@ public class NameplateActions {
     }
 
     private void updateCooldown(Player player) {
-        lastPreviewTime.put(player.getUniqueId(), System.currentTimeMillis());
+        long currentTime = System.currentTimeMillis();
+        lastPreviewTime.put(player.getUniqueId(), currentTime);
+        lastPreviewCurrentTime.put(player.getUniqueId(), currentTime);
     }
 
     private String formatCooldown(Player player) {
@@ -117,7 +122,30 @@ public class NameplateActions {
         return "0";
     }
 
+    private boolean checkPreviewCurrentCooldown(Player player) {
+        UUID playerId = player.getUniqueId();
+        if (lastPreviewCurrentTime.containsKey(playerId)) {
+            long lastTime = lastPreviewCurrentTime.get(playerId);
+            long currentTime = System.currentTimeMillis();
+            return (currentTime - lastTime) < PREVIEW_CURRENT_COOLDOWN_MS;
+        }
+        return false;
+    }
+
+    private String formatPreviewCurrentCooldown(Player player) {
+        UUID playerId = player.getUniqueId();
+        if (lastPreviewCurrentTime.containsKey(playerId)) {
+            long lastTime = lastPreviewCurrentTime.get(playerId);
+            long currentTime = System.currentTimeMillis();
+            long remaining = PREVIEW_CURRENT_COOLDOWN_MS - (currentTime - lastTime);
+            return String.valueOf((int) Math.ceil(remaining / 1000.0));
+        }
+        return "0";
+    }
+
     public void clearCooldown(Player player) {
-        lastPreviewTime.remove(player.getUniqueId());
+        UUID playerId = player.getUniqueId();
+        lastPreviewTime.remove(playerId);
+        lastPreviewCurrentTime.remove(playerId);
     }
 }

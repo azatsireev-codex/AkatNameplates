@@ -123,9 +123,26 @@ public class NameplateCommand implements CommandExecutor, TabCompleter {
             purchaseMenu = new NameplateMenu(
                     spiGUI,
                     manager.getNameplates(),
-                    manager.getMenuTitle(),
-                    manager.getMenuRows(),
-                    actions
+                    manager.getPacksMenuTitle(),
+                    manager.getPacksMenuRows(),
+                    manager.getNameplatesMenuTitle(),
+                    manager.getNameplatesMenuRows(),
+                    manager.getPacksMenuInfoSlot(),
+                    manager.getPacksMenuPreviewSlot(),
+                    manager.getPacksMenuUnequipSlot(),
+                    manager.getPacksMenuPreviousSlot(),
+                    manager.getPacksMenuNextSlot(),
+                    manager.getNameplatesMenuBackSlot(),
+                    manager.getNameplatesMenuUnequipSlot(),
+                    manager.getNameplatesMenuPreviousSlot(),
+                    manager.getNameplatesMenuNextSlot(),
+                    manager.getDonateUrl(),
+                    manager.getPacksMenuPackSlots(),
+                    manager.getNameplatesMenuItemSlots(),
+                    actions,
+                    manager.getPackModels(),
+                    manager.getButtonModels(),
+                    manager.getPacksAfterGeneral()
             );
 
             sender.sendMessage(ChatColor.GREEN + "Конфигурация ников перезагружена!");
