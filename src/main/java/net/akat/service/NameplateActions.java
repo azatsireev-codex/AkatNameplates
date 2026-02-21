@@ -46,10 +46,6 @@ public class NameplateActions {
             return;
         }
 
-        if (checkCooldown(player)) {
-            player.sendMessage(ChatColor.RED + "Подождите " + formatCooldown(player) + " секунд перед следующим предпросмотром!");
-            return;
-        }
 
         player.closeInventory();
         Bukkit.getGlobalRegionScheduler().run(NameplatesPlugin.getInstance(), t -> {
