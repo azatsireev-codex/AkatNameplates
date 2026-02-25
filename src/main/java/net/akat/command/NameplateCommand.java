@@ -3,7 +3,9 @@ package net.akat.command;
 import net.akat.api.spigui.SpiGUI;
 import net.akat.manager.NameplateManager;
 import net.akat.menu.NameplateMenu;
+import net.akat.menu.UniqueOrderAdminMenu;
 import net.akat.service.NameplateActions;
+import net.akat.unique.UniqueOrderService;
 import net.md_5.bungee.api.ChatColor;
 import org.bukkit.Bukkit;
 import org.bukkit.command.Command;
@@ -21,14 +23,20 @@ public class NameplateCommand implements CommandExecutor, TabCompleter {
     private NameplateMenu purchaseMenu;
     private final SpiGUI spiGUI;
     private final NameplateActions actions;
+    private final UniqueOrderService uniqueOrderService;
+    private final UniqueOrderAdminMenu uniqueOrderAdminMenu;
 
     public NameplateCommand(NameplateManager manager, NameplateMenu purchaseMenu,
                             SpiGUI spiGUI,
-                            NameplateActions actions) {
+                            NameplateActions actions,
+                            UniqueOrderService uniqueOrderService,
+                            UniqueOrderAdminMenu uniqueOrderAdminMenu) {
         this.manager = manager;
         this.purchaseMenu = purchaseMenu;
         this.spiGUI = spiGUI;
         this.actions = actions;
+        this.uniqueOrderService = uniqueOrderService;
+        this.uniqueOrderAdminMenu = uniqueOrderAdminMenu;
     }
 
     @Override
@@ -45,7 +53,7 @@ public class NameplateCommand implements CommandExecutor, TabCompleter {
                 purchaseMenu.open((Player) sender);
                 return true;
             } else {
-                sender.sendMessage(ChatColor.RED + "Использование: /" + label + " <shop|my> [игрок]");
+                sender.sendMessage(ChatColor.RED + "Использование: /" + label + " <shop|my|uniqueorders> [игрок]");
                 sender.sendMessage(ChatColor.RED + "Или: /" + label + " reload");
                 return false;
             }
@@ -60,11 +68,14 @@ public class NameplateCommand implements CommandExecutor, TabCompleter {
             case "reload":
                 return handleReloadCommand(sender, label);
 
+            case "uniqueorders":
+                return handleUniqueOrdersCommand(sender);
+
             default:
                 // Показываем разный хелп в зависимости от команды
                 String cmd = isShortCommand ? label : "akatnameplates";
                 if (sender.hasPermission("akatnameplates.admin")) {
-                    sender.sendMessage(ChatColor.RED + "Использование: /" + cmd + " <shop|my> [игрок]");
+                    sender.sendMessage(ChatColor.RED + "Использование: /" + cmd + " <shop|my|uniqueorders> [игрок]");
                     sender.sendMessage(ChatColor.RED + "Или: /" + cmd + " reload");
                 } else {
                     sender.sendMessage(ChatColor.RED + "Использование: /" + cmd + " [shop|my]");
@@ -119,13 +130,32 @@ public class NameplateCommand implements CommandExecutor, TabCompleter {
         }
 
         if (manager.reloadConfig()) {
+            uniqueOrderService.reload();
 
             purchaseMenu = new NameplateMenu(
                     spiGUI,
                     manager.getNameplates(),
-                    manager.getMenuTitle(),
-                    manager.getMenuRows(),
-                    actions
+                    manager.getPacksMenuTitle(),
+                    manager.getPacksMenuRows(),
+                    manager.getNameplatesMenuTitle(),
+                    manager.getNameplatesMenuRows(),
+                    manager.getPacksMenuInfoSlot(),
+                    manager.getPacksMenuPreviewSlot(),
+                    manager.getPacksMenuUnequipSlot(),
+                    manager.getPacksMenuPreviousSlot(),
+                    manager.getPacksMenuNextSlot(),
+                    manager.getNameplatesMenuBackSlot(),
+                    manager.getNameplatesMenuUnequipSlot(),
+                    manager.getNameplatesMenuPreviousSlot(),
+                    manager.getNameplatesMenuNextSlot(),
+                    manager.getDonateUrl(),
+                    manager.getPacksMenuPackSlots(),
+                    manager.getNameplatesMenuItemSlots(),
+                    actions,
+                    manager.getPackModels(),
+                    manager.getButtonModels(),
+                    manager.getPacksAfterGeneral(),
+                    uniqueOrderService
             );
 
             sender.sendMessage(ChatColor.GREEN + "Конфигурация ников перезагружена!");
@@ -135,12 +165,28 @@ public class NameplateCommand implements CommandExecutor, TabCompleter {
         return true;
     }
 
+
+    private boolean handleUniqueOrdersCommand(CommandSender sender) {
+        if (!(sender instanceof Player player)) {
+            sender.sendMessage(ChatColor.RED + "Команда доступна только игрокам.");
+            return true;
+        }
+
+        if (!sender.hasPermission("akatnameplates.uniqueorders") && !sender.hasPermission("akatnameplates.admin")) {
+            sender.sendMessage(ChatColor.RED + "У вас нет прав на эту команду!");
+            return true;
+        }
+
+        uniqueOrderAdminMenu.open(player, 0);
+        return true;
+    }
+
     @Override
     public List<String> onTabComplete(CommandSender sender, Command command, String alias, String[] args) {
         List<String> completions = new ArrayList<>();
 
         if (args.length == 1) {
-            List<String> allCommands = Arrays.asList("shop", "my", "reload");
+            List<String> allCommands = Arrays.asList("shop", "my", "reload", "uniqueorders");
 
             for (String cmd : allCommands) {
                 if (cmd.startsWith(args[0].toLowerCase())) {
@@ -181,6 +227,9 @@ public class NameplateCommand implements CommandExecutor, TabCompleter {
             case "reload":
                 // Для reload проверяем специальный пермишен
                 return sender.hasPermission("akatnameplates.reload");
+
+            case "uniqueorders":
+                return sender.hasPermission("akatnameplates.uniqueorders") || sender.hasPermission("akatnameplates.admin");
 
             default:
                 return false;

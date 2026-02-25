@@ -1,0 +1,25 @@
+unique-orders:
+  enabled: true
+  pack-name: "Уникальные"
+  price: 3000
+  button-slot: 49
+  button-name: "&6Заказать уникальный ник"
+  button-lore:
+    - "&7Это индивидуальный заказ"
+    - "&7Цена: &e3000 &f\uE058"
+    - "&cПеред покупкой проверь Telegram-привязку"
+  warning-messages:
+    - "&cВНИМАНИЕ: перед покупкой уникального ника"
+    - "&cу вас должен быть привязан актуальный Telegram аккаунт"
+    - "&cиначе администрация не сможет связаться с вами."
+
+endpoints:
+  purchase: "http://127.0.0.1:8080/api/unique-order/purchased"
+  complete: "http://127.0.0.1:8080/api/unique-order/completed"
+
+database:
+  host: "127.0.0.1"
+  port: 3306
+  name: "nameplates"
+  user: "root"
+  password: "change-me"

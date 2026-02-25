@@ -18,6 +18,7 @@ commands:
       /anp - открыть магазин
       /anp shop - открыть магазин покупки
       /anp my - открыть список купленных табличек
+      /anp uniqueorders - меню заказов уникальных ников (админ)
 
 permissions:
   akatnameplates.use:
@@ -28,4 +29,7 @@ permissions:
     default: op
   akatnameplates.reload:
     description: Позволяет перезагружать конфиг табличек
+    default: op
+  akatnameplates.uniqueorders:
+    description: Позволяет открывать меню заказов уникальных ников
     default: op

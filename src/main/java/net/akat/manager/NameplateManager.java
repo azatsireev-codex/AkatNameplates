@@ -13,20 +13,46 @@ import org.bukkit.plugin.java.JavaPlugin;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.List;
+import java.util.Set;
 import java.util.logging.Level;
 import java.util.stream.Collectors;
 
 public class NameplateManager {
     private final JavaPlugin plugin;
     private File configFile;
+    private File packConfigFile;
     private FileConfiguration config;
+    private FileConfiguration packConfig;
     private final Map<String, NameplateItem> nameplates = new HashMap<>();
     private final Map<String, PackItem> packs = new HashMap<>(); // Новое поле для пакетов
-    private String menuTitle;
-    private int menuRows;
+    private final Map<String, String> packModels = new HashMap<>();
+    private final Map<String, String> buttonModels = new HashMap<>();
+    private final Set<String> packsAfterGeneral = new LinkedHashSet<>();
+    private String packsMenuTitle;
+    private int packsMenuRows;
+    private String nameplatesMenuTitle;
+    private int nameplatesMenuRows;
+
+    private int packsMenuInfoSlot;
+    private int packsMenuPreviewSlot;
+    private int packsMenuUnequipSlot;
+    private int packsMenuPreviousSlot;
+    private int packsMenuNextSlot;
+
+    private int nameplatesMenuBackSlot;
+    private int nameplatesMenuUnequipSlot;
+    private int nameplatesMenuPreviousSlot;
+    private int nameplatesMenuNextSlot;
+
+    private String donateUrl;
+    private List<Integer> packsMenuPackSlots;
+    private List<Integer> nameplatesMenuItemSlots;
 
     // Класс для хранения информации о пакете
     public static class PackItem {
@@ -101,20 +127,98 @@ public class NameplateManager {
         }
 
         config = YamlConfiguration.loadConfiguration(configFile);
+
+        packConfigFile = new File(plugin.getDataFolder(), "pack.yml");
+        initializePackConfig(collectPackNamesFromNameplatesConfig());
+
         reloadNameplates();
     }
 
     public void reloadNameplates() {
         nameplates.clear();
         packs.clear(); // Очищаем пакеты
+        Set<String> usedPackNames = new LinkedHashSet<>();
 
         // Загружаем настройки меню
         ConfigurationSection menuSection = config.getConfigurationSection("menu");
         if (menuSection != null) {
-            menuTitle = menuSection.getString("title", "&6&lВыбор ника");
-            menuRows = menuSection.getInt("rows", 3);
-            // Ограничиваем rows от 1 до 6
-            menuRows = Math.max(1, Math.min(6, menuRows));
+            String legacyTitle = menuSection.getString("title", "&6&lВыбор ника");
+            int legacyRows = menuSection.getInt("rows", 3);
+            legacyRows = Math.max(1, Math.min(6, legacyRows));
+
+            ConfigurationSection packsMenuSection = menuSection.getConfigurationSection("packs-menu");
+            packsMenuTitle = packsMenuSection != null
+                    ? packsMenuSection.getString("title", legacyTitle)
+                    : legacyTitle;
+            packsMenuRows = packsMenuSection != null
+                    ? packsMenuSection.getInt("rows", legacyRows)
+                    : legacyRows;
+            packsMenuRows = Math.max(1, Math.min(6, packsMenuRows));
+
+            ConfigurationSection nameplatesMenuSection = menuSection.getConfigurationSection("nameplates-menu");
+            nameplatesMenuTitle = nameplatesMenuSection != null
+                    ? nameplatesMenuSection.getString("title", "§8Пакет: {pack} §7(§f{currentPage}/{totalPages}§7)")
+                    : "§8Пакет: {pack} §7(§f{currentPage}/{totalPages}§7)";
+            nameplatesMenuRows = nameplatesMenuSection != null
+                    ? nameplatesMenuSection.getInt("rows", legacyRows)
+                    : legacyRows;
+            nameplatesMenuRows = Math.max(1, Math.min(6, nameplatesMenuRows));
+
+            ConfigurationSection packsMenuSlotsSection = packsMenuSection != null
+                    ? packsMenuSection.getConfigurationSection("slots")
+                    : null;
+            packsMenuInfoSlot = packsMenuSlotsSection != null
+                    ? packsMenuSlotsSection.getInt("info", 31)
+                    : 31;
+            packsMenuPreviewSlot = packsMenuSlotsSection != null
+                    ? packsMenuSlotsSection.getInt("preview-current", 32)
+                    : 32;
+            packsMenuUnequipSlot = packsMenuSlotsSection != null
+                    ? packsMenuSlotsSection.getInt("unequip", 30)
+                    : 30;
+            packsMenuPreviousSlot = packsMenuSlotsSection != null
+                    ? packsMenuSlotsSection.getInt("previous", 29)
+                    : 29;
+            packsMenuNextSlot = packsMenuSlotsSection != null
+                    ? packsMenuSlotsSection.getInt("next", 33)
+                    : 33;
+
+            ConfigurationSection nameplatesMenuSlotsSection = nameplatesMenuSection != null
+                    ? nameplatesMenuSection.getConfigurationSection("slots")
+                    : null;
+            nameplatesMenuBackSlot = nameplatesMenuSlotsSection != null
+                    ? nameplatesMenuSlotsSection.getInt("back", 31)
+                    : 31;
+            nameplatesMenuUnequipSlot = nameplatesMenuSlotsSection != null
+                    ? nameplatesMenuSlotsSection.getInt("unequip", 30)
+                    : 30;
+            nameplatesMenuPreviousSlot = nameplatesMenuSlotsSection != null
+                    ? nameplatesMenuSlotsSection.getInt("previous", 29)
+                    : 29;
+            donateUrl = packsMenuSection != null
+                    ? packsMenuSection.getString("donate-url", "https://neft.games/donate")
+                    : "https://neft.games/donate";
+
+            packsMenuPackSlots = packsMenuSection != null
+                    ? packsMenuSection.getIntegerList("pack-slots")
+                    : Collections.emptyList();
+            if (packsMenuPackSlots == null || packsMenuPackSlots.isEmpty()) {
+                packsMenuPackSlots = Arrays.asList(
+                        10, 11, 12, 13, 14, 15, 16,
+                        19, 20, 21, 22, 23, 24, 25
+                );
+            }
+
+            nameplatesMenuItemSlots = nameplatesMenuSection != null
+                    ? nameplatesMenuSection.getIntegerList("item-slots")
+                    : Collections.emptyList();
+            if (nameplatesMenuItemSlots == null || nameplatesMenuItemSlots.isEmpty()) {
+                nameplatesMenuItemSlots = Arrays.asList(
+                        10, 11, 12, 13, 14, 15, 16,
+                        19, 20, 21, 22, 23, 24, 25,
+                        37, 38, 39, 40, 41, 42, 43
+                );
+            }
 
             // Загружаем пакеты из конфига
             ConfigurationSection packsSection = menuSection.getConfigurationSection("packs");
@@ -133,8 +237,29 @@ public class NameplateManager {
                 }
             }
         } else {
-            menuTitle = "&6&lВыбор ника";
-            menuRows = 3;
+            packsMenuTitle = "&6&lВыбор ника";
+            packsMenuRows = 3;
+            nameplatesMenuTitle = "§8Пакет: {pack} §7(§f{currentPage}/{totalPages}§7)";
+            nameplatesMenuRows = 3;
+            packsMenuInfoSlot = 31;
+            packsMenuPreviewSlot = 32;
+            packsMenuUnequipSlot = 30;
+            packsMenuPreviousSlot = 29;
+            packsMenuNextSlot = 33;
+            nameplatesMenuBackSlot = 31;
+            nameplatesMenuUnequipSlot = 30;
+            nameplatesMenuPreviousSlot = 29;
+            nameplatesMenuNextSlot = 33;
+            donateUrl = "https://neft.games/donate";
+            packsMenuPackSlots = Arrays.asList(
+                    10, 11, 12, 13, 14, 15, 16,
+                    19, 20, 21, 22, 23, 24, 25
+            );
+            nameplatesMenuItemSlots = Arrays.asList(
+                    10, 11, 12, 13, 14, 15, 16,
+                    19, 20, 21, 22, 23, 24, 25,
+                    37, 38, 39, 40, 41, 42, 43
+            );
         }
 
         // Загружаем таблички
@@ -148,10 +273,13 @@ public class NameplateManager {
 
                         // Добавляем ники в соответствующие пакеты
                         if (item.hasPack()) {
+                            usedPackNames.add(item.getPack());
                             PackItem pack = packs.get(item.getPack());
                             if (pack != null) {
                                 pack.addItem(item);
                             }
+                        } else {
+                            usedPackNames.add("Общие");
                         }
                     }
                 } catch (Exception e) {
@@ -160,7 +288,139 @@ public class NameplateManager {
             }
         }
 
+        ensurePackConfigContains(usedPackNames);
+        loadPackModels(usedPackNames);
+        loadPacksAfterGeneral(usedPackNames);
+        loadButtonModels();
+
         plugin.getLogger().info("Загружено " + nameplates.size() + " ников и " + packs.size() + " пакетов");
+    }
+
+
+    private Set<String> collectPackNamesFromNameplatesConfig() {
+        Set<String> packNames = new LinkedHashSet<>();
+        ConfigurationSection nameplatesSection = config.getConfigurationSection("nameplates");
+        if (nameplatesSection == null) {
+            return packNames;
+        }
+
+        for (String key : nameplatesSection.getKeys(false)) {
+            ConfigurationSection itemSection = nameplatesSection.getConfigurationSection(key);
+            if (itemSection == null) {
+                continue;
+            }
+
+            String packName = itemSection.getString("pack", "").trim();
+            if (!packName.isEmpty()) {
+                packNames.add(packName);
+            } else {
+                packNames.add("Общие");
+            }
+        }
+
+        return packNames;
+    }
+
+    private void initializePackConfig(Set<String> packNames) {
+        if (!packConfigFile.exists()) {
+            YamlConfiguration newPackConfig = new YamlConfiguration();
+            ConfigurationSection packsSection = newPackConfig.createSection("packs");
+            for (String packName : packNames) {
+                packsSection.createSection(packName);
+            }
+
+            try {
+                newPackConfig.save(packConfigFile);
+                plugin.getLogger().info("Создан новый файл конфигурации pack.yml");
+            } catch (IOException e) {
+                plugin.getLogger().log(Level.SEVERE, "Не удалось создать pack.yml", e);
+            }
+        }
+
+        packConfig = YamlConfiguration.loadConfiguration(packConfigFile);
+    }
+
+    private void ensurePackConfigContains(Set<String> packNames) {
+        if (packConfig == null) {
+            packConfig = YamlConfiguration.loadConfiguration(packConfigFile);
+        }
+
+        ConfigurationSection packsSection = packConfig.getConfigurationSection("packs");
+        if (packsSection == null) {
+            packsSection = packConfig.createSection("packs");
+        }
+
+        boolean changed = false;
+        for (String packName : packNames) {
+            if (!packsSection.contains(packName)) {
+                packsSection.createSection(packName);
+                changed = true;
+            }
+        }
+
+        if (changed) {
+            try {
+                packConfig.save(packConfigFile);
+            } catch (IOException e) {
+                plugin.getLogger().log(Level.SEVERE, "Не удалось сохранить pack.yml", e);
+            }
+        }
+    }
+
+    private void loadPackModels(Set<String> packNames) {
+        packModels.clear();
+        if (packConfig == null) {
+            packConfig = YamlConfiguration.loadConfiguration(packConfigFile);
+        }
+
+        for (String packName : packNames) {
+            ConfigurationSection packSection = packConfig.getConfigurationSection("packs." + packName);
+            if (packSection == null || !packSection.contains("model")) {
+                continue;
+            }
+
+            String model = packSection.getString("model", "").trim();
+            if (!model.isEmpty()) {
+                packModels.put(packName, model);
+            }
+        }
+    }
+
+    private void loadButtonModels() {
+        buttonModels.clear();
+        if (packConfig == null) {
+            packConfig = YamlConfiguration.loadConfiguration(packConfigFile);
+        }
+
+        ConfigurationSection buttonsSection = packConfig.getConfigurationSection("buttons");
+        if (buttonsSection == null) {
+            return;
+        }
+
+        for (String key : buttonsSection.getKeys(false)) {
+            String model = buttonsSection.getString(key, "").trim();
+            if (!model.isEmpty()) {
+                buttonModels.put(key, model);
+            }
+        }
+    }
+
+    private void loadPacksAfterGeneral(Set<String> packNames) {
+        packsAfterGeneral.clear();
+        if (packConfig == null) {
+            packConfig = YamlConfiguration.loadConfiguration(packConfigFile);
+        }
+
+        for (String packName : packNames) {
+            ConfigurationSection packSection = packConfig.getConfigurationSection("packs." + packName);
+            if (packSection == null) {
+                continue;
+            }
+
+            if (packSection.getBoolean("after-general", false)) {
+                packsAfterGeneral.add(packName);
+            }
+        }
     }
 
     private NameplateItem loadNameplateItem(String id, ConfigurationSection section) {
@@ -210,6 +470,7 @@ public class NameplateManager {
     public boolean reloadConfig() {
         try {
             config = YamlConfiguration.loadConfiguration(configFile);
+            initializePackConfig(collectPackNamesFromNameplatesConfig());
             reloadNameplates();
             return true;
         } catch (Exception e) {
@@ -250,11 +511,80 @@ public class NameplateManager {
         return nameplates.get(id);
     }
 
-    public String getMenuTitle() {
-        return menuTitle;
+    public String getPacksMenuTitle() {
+        return packsMenuTitle;
     }
 
-    public int getMenuRows() {
-        return menuRows;
+    public int getPacksMenuRows() {
+        return packsMenuRows;
+    }
+
+    public String getNameplatesMenuTitle() {
+        return nameplatesMenuTitle;
+    }
+
+    public int getNameplatesMenuRows() {
+        return nameplatesMenuRows;
+    }
+
+
+    public int getPacksMenuInfoSlot() {
+        return packsMenuInfoSlot;
+    }
+
+    public int getPacksMenuPreviewSlot() {
+        return packsMenuPreviewSlot;
+    }
+
+    public int getPacksMenuUnequipSlot() {
+        return packsMenuUnequipSlot;
+    }
+
+    public int getPacksMenuPreviousSlot() {
+        return packsMenuPreviousSlot;
+    }
+
+    public int getPacksMenuNextSlot() {
+        return packsMenuNextSlot;
+    }
+
+    public int getNameplatesMenuBackSlot() {
+        return nameplatesMenuBackSlot;
+    }
+
+    public int getNameplatesMenuUnequipSlot() {
+        return nameplatesMenuUnequipSlot;
+    }
+
+    public int getNameplatesMenuPreviousSlot() {
+        return nameplatesMenuPreviousSlot;
+    }
+
+    public int getNameplatesMenuNextSlot() {
+        return nameplatesMenuNextSlot;
+    }
+
+    public String getDonateUrl() {
+        return donateUrl;
+    }
+
+    public List<Integer> getPacksMenuPackSlots() {
+        return new ArrayList<>(packsMenuPackSlots);
+    }
+
+    public List<Integer> getNameplatesMenuItemSlots() {
+        return new ArrayList<>(nameplatesMenuItemSlots);
+    }
+
+    public Map<String, String> getPackModels() {
+        return new HashMap<>(packModels);
+    }
+
+    public Map<String, String> getButtonModels() {
+        return new HashMap<>(buttonModels);
+    }
+
+    public Set<String> getPacksAfterGeneral() {
+        return new LinkedHashSet<>(packsAfterGeneral);
     }
 }

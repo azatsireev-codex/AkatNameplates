@@ -5,8 +5,10 @@ import net.akat.command.ConfirmationCommandHandler;
 import net.akat.command.NameplateCommand;
 import net.akat.manager.NameplateManager;
 import net.akat.menu.NameplateMenu;
+import net.akat.menu.UniqueOrderAdminMenu;
 import net.akat.service.NameplateActions;
 import net.akat.service.NameplateOwnershipService;
+import net.akat.unique.UniqueOrderService;
 import net.luckperms.api.LuckPerms;
 import net.luckperms.api.LuckPermsProvider;
 import net.md_5.bungee.api.ChatColor;
@@ -24,6 +26,8 @@ public class NameplatesPlugin extends JavaPlugin {
 
     private NameplateActions actions;
     private NameplateOwnershipService ownership;
+    private UniqueOrderService uniqueOrderService;
+    private UniqueOrderAdminMenu uniqueOrderAdminMenu;
 
     @Override
     public void onEnable() {
@@ -39,25 +43,47 @@ public class NameplatesPlugin extends JavaPlugin {
         // Менеджер конфигурации
         this.manager = new NameplateManager(this);
         this.ownership = new NameplateOwnershipService(luckPerms);
-        this.actions = new NameplateActions(balanceClient, ownership);
+        this.uniqueOrderService = new UniqueOrderService(this);
+        this.actions = new NameplateActions(balanceClient, ownership, uniqueOrderService);
+        this.uniqueOrderAdminMenu = new UniqueOrderAdminMenu(spiGUI, uniqueOrderService);
 
         var nameplateItems = manager.getNameplates();
-        var menuTitle = manager.getMenuTitle();
-        var menuRows = manager.getMenuRows();
+        var packsMenuTitle = manager.getPacksMenuTitle();
+        var packsMenuRows = manager.getPacksMenuRows();
+        var nameplatesMenuTitle = manager.getNameplatesMenuTitle();
+        var nameplatesMenuRows = manager.getNameplatesMenuRows();
 
         this.purchaseMenu = new NameplateMenu(
                 spiGUI,
                 nameplateItems,
-                menuTitle,
-                menuRows,
-                actions
+                packsMenuTitle,
+                packsMenuRows,
+                nameplatesMenuTitle,
+                nameplatesMenuRows,
+                manager.getPacksMenuInfoSlot(),
+                manager.getPacksMenuPreviewSlot(),
+                manager.getPacksMenuUnequipSlot(),
+                manager.getPacksMenuPreviousSlot(),
+                manager.getPacksMenuNextSlot(),
+                manager.getNameplatesMenuBackSlot(),
+                manager.getNameplatesMenuUnequipSlot(),
+                manager.getNameplatesMenuPreviousSlot(),
+                manager.getNameplatesMenuNextSlot(),
+                manager.getDonateUrl(),
+                manager.getPacksMenuPackSlots(),
+                manager.getNameplatesMenuItemSlots(),
+                actions,
+                manager.getPackModels(),
+                manager.getButtonModels(),
+                manager.getPacksAfterGeneral(),
+                uniqueOrderService
         );
 
         getCommand("confirm").setExecutor(new ConfirmationCommandHandler());
         getCommand("cancel").setExecutor(new ConfirmationCommandHandler());
 
         NameplateCommand command = new NameplateCommand(
-                manager, purchaseMenu, spiGUI, actions
+                manager, purchaseMenu, spiGUI, actions, uniqueOrderService, uniqueOrderAdminMenu
         );
         Objects.requireNonNull(getCommand("akatnameplates")).setExecutor(command);
         Objects.requireNonNull(getCommand("akatnameplates")).setTabCompleter(command);

@@ -1,6 +1,28 @@
 menu:
-  title: "&8Купить ник"
-  rows: 6
+  title: "&8Купить ник" # legacy fallback
+  rows: 6 # legacy fallback
+
+  packs-menu:
+    title: "&8Купить ник"
+    rows: 4
+    donate-url: "https://neft.games/donate"
+    pack-slots: [10, 11, 12, 13, 14, 15, 16, 19, 20, 21, 22, 23, 24, 25]
+    slots:
+      previous: 29
+      unequip: 30
+      info: 31
+      preview-current: 32
+      next: 33
+
+  nameplates-menu:
+    title: "&8Пакет: {pack} &7(&f{currentPage}/{totalPages}&7)"
+    rows: 6
+    item-slots: [10, 11, 12, 13, 14, 15, 16, 19, 20, 21, 22, 23, 24, 25, 37, 38, 39, 40, 41, 42, 43]
+    slots:
+      previous: 29
+      back: 31
+      unequip: 30
+      next: 33
 
 nameplates:
   angel:

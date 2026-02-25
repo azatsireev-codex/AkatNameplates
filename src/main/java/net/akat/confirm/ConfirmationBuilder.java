@@ -2,6 +2,7 @@ package net.akat.confirm;
 
 import net.akat.NameplateItem;
 import net.akat.confirm.actions.PurchaseAction;
+import net.akat.confirm.actions.UniqueOrderPurchaseAction;
 import net.akat.confirm.managers.ConfirmationManager;
 import net.akat.confirm.managers.ConfirmationPromise;
 import net.akat.service.NameplateActions;
@@ -35,4 +36,10 @@ public class ConfirmationBuilder {
     public static ConfirmationPromise sendPurchase(Player player, NameplateItem item, NameplateActions actions) {
         return send(player, new PurchaseAction(item, actions), 30);
     }
+
+    public static ConfirmationPromise sendUniqueOrderPurchase(Player player, NameplateActions actions, int timeoutSeconds) {
+        player.sendMessage(MINI.deserialize("<red><bold>ВНИМАНИЕ:</bold></red> <yellow>Перед покупкой привяжите актуальный Telegram аккаунт к серверу, иначе администрация не сможет с вами связаться по заказу.</yellow>"));
+        return send(player, new UniqueOrderPurchaseAction(actions), timeoutSeconds);
+    }
 }
+
