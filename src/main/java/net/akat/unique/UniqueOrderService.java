@@ -1,5 +1,6 @@
 package net.akat.unique;
 
+import net.akat.BalanceHttpClient;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
@@ -20,6 +21,7 @@ import java.util.logging.Level;
 
 public class UniqueOrderService {
     private final JavaPlugin plugin;
+    private final BalanceHttpClient balanceClient;
     private File configFile;
     private FileConfiguration config;
 
@@ -39,8 +41,9 @@ public class UniqueOrderService {
     private String purchaseEndpoint;
     private String completeEndpoint;
 
-    public UniqueOrderService(JavaPlugin plugin) {
+    public UniqueOrderService(JavaPlugin plugin, BalanceHttpClient balanceClient) {
         this.plugin = plugin;
+        this.balanceClient = balanceClient;
         loadConfig();
         initTable();
     }
@@ -205,6 +208,49 @@ public class UniqueOrderService {
             }
         } catch (Exception e) {
             plugin.getLogger().log(Level.SEVERE, "Не удалось завершить заказ", e);
+        }
+
+        return false;
+    }
+
+
+    public boolean deleteOrderWithRefund(long orderId, String adminName) {
+        String fetch = "SELECT player_uuid, player_name, price FROM unique_nameplate_orders WHERE id=? AND status='PENDING'";
+        String delete = "DELETE FROM unique_nameplate_orders WHERE id=? AND status='PENDING'";
+
+        try (Connection c = getConnection()) {
+            String playerName = null;
+            int orderPrice = 0;
+
+            try (PreparedStatement fps = c.prepareStatement(fetch)) {
+                fps.setLong(1, orderId);
+                try (ResultSet rs = fps.executeQuery()) {
+                    if (rs.next()) {
+                        playerName = rs.getString("player_name");
+                        orderPrice = rs.getInt("price");
+                    } else {
+                        return false;
+                    }
+                }
+            }
+
+            try (PreparedStatement dps = c.prepareStatement(delete)) {
+                dps.setLong(1, orderId);
+                int changed = dps.executeUpdate();
+                if (changed <= 0) {
+                    return false;
+                }
+            }
+
+            boolean refunded = balanceClient.deposit(playerName, orderPrice);
+            if (!refunded) {
+                plugin.getLogger().warning("Не удалось вернуть средства игроку " + playerName + " за удалённый заказ #" + orderId);
+            }
+
+            plugin.getLogger().info("Администратор " + adminName + " удалил заказ #" + orderId + " с возвратом средств игроку " + playerName);
+            return true;
+        } catch (Exception e) {
+            plugin.getLogger().log(Level.SEVERE, "Не удалось удалить заказ с возвратом", e);
         }
 
         return false;

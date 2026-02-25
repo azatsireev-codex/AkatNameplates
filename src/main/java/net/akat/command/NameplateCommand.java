@@ -53,7 +53,7 @@ public class NameplateCommand implements CommandExecutor, TabCompleter {
                 purchaseMenu.open((Player) sender);
                 return true;
             } else {
-                sender.sendMessage(ChatColor.RED + "Использование: /" + label + " <shop|my|uniqueorders> [игрок]");
+                sender.sendMessage(ChatColor.RED + "Использование: /" + label + " <shop|my|admin> [игрок]");
                 sender.sendMessage(ChatColor.RED + "Или: /" + label + " reload");
                 return false;
             }
@@ -68,14 +68,14 @@ public class NameplateCommand implements CommandExecutor, TabCompleter {
             case "reload":
                 return handleReloadCommand(sender, label);
 
-            case "uniqueorders":
+            case "admin":
                 return handleUniqueOrdersCommand(sender);
 
             default:
                 // Показываем разный хелп в зависимости от команды
                 String cmd = isShortCommand ? label : "akatnameplates";
                 if (sender.hasPermission("akatnameplates.admin")) {
-                    sender.sendMessage(ChatColor.RED + "Использование: /" + cmd + " <shop|my|uniqueorders> [игрок]");
+                    sender.sendMessage(ChatColor.RED + "Использование: /" + cmd + " <shop|my|admin> [игрок]");
                     sender.sendMessage(ChatColor.RED + "Или: /" + cmd + " reload");
                 } else {
                     sender.sendMessage(ChatColor.RED + "Использование: /" + cmd + " [shop|my]");
@@ -186,7 +186,7 @@ public class NameplateCommand implements CommandExecutor, TabCompleter {
         List<String> completions = new ArrayList<>();
 
         if (args.length == 1) {
-            List<String> allCommands = Arrays.asList("shop", "my", "reload", "uniqueorders");
+            List<String> allCommands = Arrays.asList("shop", "my", "reload", "admin");
 
             for (String cmd : allCommands) {
                 if (cmd.startsWith(args[0].toLowerCase())) {
@@ -228,7 +228,7 @@ public class NameplateCommand implements CommandExecutor, TabCompleter {
                 // Для reload проверяем специальный пермишен
                 return sender.hasPermission("akatnameplates.reload");
 
-            case "uniqueorders":
+            case "admin":
                 return sender.hasPermission("akatnameplates.uniqueorders") || sender.hasPermission("akatnameplates.admin");
 
             default:

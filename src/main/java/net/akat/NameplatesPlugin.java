@@ -43,7 +43,7 @@ public class NameplatesPlugin extends JavaPlugin {
         // Менеджер конфигурации
         this.manager = new NameplateManager(this);
         this.ownership = new NameplateOwnershipService(luckPerms);
-        this.uniqueOrderService = new UniqueOrderService(this);
+        this.uniqueOrderService = new UniqueOrderService(this, balanceClient);
         this.actions = new NameplateActions(balanceClient, ownership, uniqueOrderService);
         this.uniqueOrderAdminMenu = new UniqueOrderAdminMenu(spiGUI, uniqueOrderService);
 

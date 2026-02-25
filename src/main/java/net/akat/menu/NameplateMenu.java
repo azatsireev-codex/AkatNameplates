@@ -499,7 +499,6 @@ public class NameplateMenu {
             meta.setDisplayName(uniqueOrderService.getButtonName());
             List<String> lore = new ArrayList<>(uniqueOrderService.getButtonLore());
             lore.add(" ");
-            lore.add("§cПеред покупкой проверьте Telegram-привязку!");
             lore.add("§eЛКМ - Оформить заказ");
             meta.setLore(lore);
             stack.setItemMeta(meta);

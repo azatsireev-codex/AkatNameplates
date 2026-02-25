@@ -38,7 +38,6 @@ public class ConfirmationBuilder {
     }
 
     public static ConfirmationPromise sendUniqueOrderPurchase(Player player, NameplateActions actions, int timeoutSeconds) {
-        player.sendMessage(MINI.deserialize("<red><bold>ВНИМАНИЕ:</bold></red> <yellow>Перед покупкой привяжите актуальный Telegram аккаунт к серверу, иначе администрация не сможет с вами связаться по заказу.</yellow>"));
         return send(player, new UniqueOrderPurchaseAction(actions), timeoutSeconds);
     }
 }
