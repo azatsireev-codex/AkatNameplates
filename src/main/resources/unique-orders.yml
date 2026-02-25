@@ -18,8 +18,16 @@ endpoints:
   complete: "http://127.0.0.1:8080/api/unique-order/completed"
 
 database:
+  # mariadb | sqlite
+  type: "mariadb"
+
+  # Настройки MariaDB (используются когда type: mariadb)
   host: "127.0.0.1"
   port: 3306
   name: "nameplates"
   user: "root"
   password: "change-me"
+
+  # Настройки SQLite (используются когда type: sqlite)
+  sqlite:
+    file: "unique-orders.db"

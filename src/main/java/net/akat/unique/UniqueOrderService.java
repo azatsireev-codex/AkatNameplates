@@ -31,6 +31,7 @@ public class UniqueOrderService {
     private List<String> buttonLore;
     private List<String> warningMessages;
 
+    private String dbType;
     private String dbUrl;
     private String dbUser;
     private String dbPassword;
@@ -70,31 +71,61 @@ public class UniqueOrderService {
             warningMessages = List.of("§cПеред покупкой привяжите актуальный Telegram аккаунт.");
         }
 
-        String host = config.getString("database.host", "127.0.0.1");
-        int port = config.getInt("database.port", 3306);
-        String database = config.getString("database.name", "nameplates");
-        dbUser = config.getString("database.user", "root");
-        dbPassword = config.getString("database.password", "");
-        dbUrl = "jdbc:mariadb://" + host + ":" + port + "/" + database + "?useUnicode=true&characterEncoding=utf8";
+        dbType = config.getString("database.type", "mariadb").trim().toLowerCase();
+        if (dbType.equals("sqlite")) {
+            String sqliteFileName = config.getString("database.sqlite.file", "unique-orders.db");
+            File sqliteFile = new File(plugin.getDataFolder(), sqliteFileName);
+            File parent = sqliteFile.getParentFile();
+            if (parent != null && !parent.exists()) {
+                parent.mkdirs();
+            }
+            dbUrl = "jdbc:sqlite:" + sqliteFile.getAbsolutePath();
+            dbUser = "";
+            dbPassword = "";
+        } else {
+            String host = config.getString("database.host", "127.0.0.1");
+            int port = config.getInt("database.port", 3306);
+            String database = config.getString("database.name", "nameplates");
+            dbUser = config.getString("database.user", "root");
+            dbPassword = config.getString("database.password", "");
+            dbUrl = "jdbc:mariadb://" + host + ":" + port + "/" + database + "?useUnicode=true&characterEncoding=utf8";
+            dbType = "mariadb";
+        }
 
         purchaseEndpoint = config.getString("endpoints.purchase", "").trim();
         completeEndpoint = config.getString("endpoints.complete", "").trim();
     }
 
     private Connection getConnection() throws SQLException {
+        if ("sqlite".equals(dbType)) {
+            return DriverManager.getConnection(dbUrl);
+        }
         return DriverManager.getConnection(dbUrl, dbUser, dbPassword);
     }
 
     private void initTable() {
-        String sql = "CREATE TABLE IF NOT EXISTS unique_nameplate_orders ("
-                + "id BIGINT AUTO_INCREMENT PRIMARY KEY,"
-                + "player_uuid VARCHAR(36) NOT NULL,"
-                + "player_name VARCHAR(16) NOT NULL,"
-                + "price INT NOT NULL,"
-                + "status VARCHAR(32) NOT NULL DEFAULT 'PENDING',"
-                + "created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,"
-                + "completed_at TIMESTAMP NULL"
-                + ")";
+        String sql;
+        if ("sqlite".equals(dbType)) {
+            sql = "CREATE TABLE IF NOT EXISTS unique_nameplate_orders ("
+                    + "id INTEGER PRIMARY KEY AUTOINCREMENT,"
+                    + "player_uuid TEXT NOT NULL,"
+                    + "player_name TEXT NOT NULL,"
+                    + "price INTEGER NOT NULL,"
+                    + "status TEXT NOT NULL DEFAULT 'PENDING',"
+                    + "created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,"
+                    + "completed_at DATETIME NULL"
+                    + ")";
+        } else {
+            sql = "CREATE TABLE IF NOT EXISTS unique_nameplate_orders ("
+                    + "id BIGINT AUTO_INCREMENT PRIMARY KEY,"
+                    + "player_uuid VARCHAR(36) NOT NULL,"
+                    + "player_name VARCHAR(16) NOT NULL,"
+                    + "price INT NOT NULL,"
+                    + "status VARCHAR(32) NOT NULL DEFAULT 'PENDING',"
+                    + "created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,"
+                    + "completed_at TIMESTAMP NULL"
+                    + ")";
+        }
 
         try (Connection c = getConnection(); Statement st = c.createStatement()) {
             st.execute(sql);
