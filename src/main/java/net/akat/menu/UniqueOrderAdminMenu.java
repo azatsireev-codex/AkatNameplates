@@ -55,8 +55,8 @@ public class UniqueOrderAdminMenu {
             infoMeta.setLore(Arrays.asList(
                     "§7Открытых заказов: §e" + orders.size(),
                     "§7Страница: §e" + (currentPage + 1) + "§7/§a" + totalPages,
-                    "§7ЛКМ: завершить заказ (через чат-подтверждение)",
-                    "§7ПКМ: удалить заказ и вернуть средства (через чат-подтверждение)"
+                    "§7ЛКМ: завершить заказ",
+                    "§7ПКМ: удалить заказ и вернуть средства"
             ));
             info.setItemMeta(infoMeta);
         }
@@ -93,13 +93,11 @@ public class UniqueOrderAdminMenu {
         if (meta != null) {
             meta.setDisplayName("§e" + order.getPlayerName() + " §7(#" + order.getId() + ")");
             List<String> lore = new ArrayList<>();
-            lore.add("§7UUID: §f" + order.getPlayerUuid());
             lore.add("§7Цена: §a" + order.getPrice() + " §f\uE058");
             lore.add("§7Создан: §f" + order.getCreatedAt().format(formatter));
             lore.add(" ");
             lore.add("§aЛКМ - завершить заказ");
             lore.add("§cПКМ - удалить заказ и вернуть средства");
-            lore.add("§7Подтверждение придёт в чат (/confirm /cancel)");
             meta.setLore(lore);
             stack.setItemMeta(meta);
         }
