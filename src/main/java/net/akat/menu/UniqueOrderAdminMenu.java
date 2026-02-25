@@ -3,6 +3,7 @@ package net.akat.menu;
 import net.akat.api.spigui.SpiGUI;
 import net.akat.api.spigui.buttons.SGButton;
 import net.akat.api.spigui.menu.SGMenu;
+import net.akat.confirm.ConfirmationBuilder;
 import net.akat.unique.UniqueOrder;
 import net.akat.unique.UniqueOrderService;
 import net.md_5.bungee.api.ChatColor;
@@ -14,36 +15,13 @@ import org.bukkit.inventory.meta.ItemMeta;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-import java.util.UUID;
 import java.util.function.Consumer;
 
 public class UniqueOrderAdminMenu {
-    private static final long CONFIRM_TIMEOUT_MS = 10000L;
-
     private final SpiGUI spiGUI;
     private final UniqueOrderService uniqueOrderService;
     private final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm");
-    private final Map<UUID, PendingConfirmation> pendingActions = new HashMap<>();
-
-    private enum AdminAction {
-        COMPLETE,
-        DELETE_REFUND
-    }
-
-    private static class PendingConfirmation {
-        private final long orderId;
-        private final AdminAction action;
-        private final long expiresAt;
-
-        private PendingConfirmation(long orderId, AdminAction action, long expiresAt) {
-            this.orderId = orderId;
-            this.action = action;
-            this.expiresAt = expiresAt;
-        }
-    }
 
     public UniqueOrderAdminMenu(SpiGUI spiGUI, UniqueOrderService uniqueOrderService) {
         this.spiGUI = spiGUI;
@@ -77,9 +55,8 @@ public class UniqueOrderAdminMenu {
             infoMeta.setLore(Arrays.asList(
                     "§7Открытых заказов: §e" + orders.size(),
                     "§7Страница: §e" + (currentPage + 1) + "§7/§a" + totalPages,
-                    "§7ЛКМ: завершить заказ",
-                    "§7ПКМ: удалить заказ и вернуть средства",
-                    "§cНужно двойное подтверждение кликом"
+                    "§7ЛКМ: завершить заказ (через чат-подтверждение)",
+                    "§7ПКМ: удалить заказ и вернуть средства (через чат-подтверждение)"
             ));
             info.setItemMeta(infoMeta);
         }
@@ -122,58 +99,36 @@ public class UniqueOrderAdminMenu {
             lore.add(" ");
             lore.add("§aЛКМ - завершить заказ");
             lore.add("§cПКМ - удалить заказ и вернуть средства");
-            lore.add("§7(требуется повторный клик для подтверждения)");
+            lore.add("§7Подтверждение придёт в чат (/confirm /cancel)");
             meta.setLore(lore);
             stack.setItemMeta(meta);
         }
 
         return new SGButton(stack).withListener(e -> {
             e.setCancelled(true);
-            AdminAction action = e.isRightClick() ? AdminAction.DELETE_REFUND : AdminAction.COMPLETE;
 
-            if (!checkAndConfirm(admin, order.getId(), action)) {
+            if (e.isRightClick()) {
+                ConfirmationBuilder.sendUniqueOrderDeleteWithRefund(admin, uniqueOrderService, order.getId())
+                        .then(success -> {
+                            if (success) {
+                                admin.sendMessage(ChatColor.GREEN + "Заказ #" + order.getId() + " удалён, средства возвращены игроку.");
+                                open(admin, page);
+                            } else {
+                                admin.sendMessage(ChatColor.RED + "Удаление заказа отменено или завершилось ошибкой.");
+                            }
+                        });
                 return;
             }
 
-            boolean success;
-            if (action == AdminAction.COMPLETE) {
-                success = uniqueOrderService.completeOrder(order.getId(), admin.getName());
-                if (success) {
-                    admin.sendMessage(ChatColor.GREEN + "Заказ #" + order.getId() + " завершён.");
-                } else {
-                    admin.sendMessage(ChatColor.RED + "Не удалось завершить заказ. Возможно, он уже закрыт.");
-                }
-            } else {
-                success = uniqueOrderService.deleteOrderWithRefund(order.getId(), admin.getName());
-                if (success) {
-                    admin.sendMessage(ChatColor.GREEN + "Заказ #" + order.getId() + " удалён, средства возвращены игроку.");
-                } else {
-                    admin.sendMessage(ChatColor.RED + "Не удалось удалить заказ/вернуть средства. Проверьте логи.");
-                }
-            }
-
-            if (success) {
-                open(admin, page);
-            }
+            ConfirmationBuilder.sendUniqueOrderComplete(admin, uniqueOrderService, order.getId())
+                    .then(success -> {
+                        if (success) {
+                            admin.sendMessage(ChatColor.GREEN + "Заказ #" + order.getId() + " завершён.");
+                            open(admin, page);
+                        } else {
+                            admin.sendMessage(ChatColor.RED + "Завершение заказа отменено или завершилось ошибкой.");
+                        }
+                    });
         });
-    }
-
-    private boolean checkAndConfirm(Player admin, long orderId, AdminAction action) {
-        UUID adminId = admin.getUniqueId();
-        long now = System.currentTimeMillis();
-
-        PendingConfirmation pending = pendingActions.get(adminId);
-        if (pending != null && pending.expiresAt >= now && pending.orderId == orderId && pending.action == action) {
-            pendingActions.remove(adminId);
-            return true;
-        }
-
-        pendingActions.put(adminId, new PendingConfirmation(orderId, action, now + CONFIRM_TIMEOUT_MS));
-        if (action == AdminAction.COMPLETE) {
-            admin.sendMessage(ChatColor.YELLOW + "Повторно нажмите ЛКМ по заказу #" + orderId + " в течение 10 секунд для подтверждения завершения.");
-        } else {
-            admin.sendMessage(ChatColor.YELLOW + "Повторно нажмите ПКМ по заказу #" + orderId + " в течение 10 секунд для подтверждения удаления с возвратом.");
-        }
-        return false;
     }
 }

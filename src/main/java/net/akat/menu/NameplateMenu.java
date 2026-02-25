@@ -496,10 +496,12 @@ public class NameplateMenu {
         ItemMeta meta = stack.getItemMeta();
 
         if (meta != null) {
-            meta.setDisplayName(uniqueOrderService.getButtonName());
-            List<String> lore = new ArrayList<>(uniqueOrderService.getButtonLore());
+            meta.setDisplayName(ColorUtil.colorize(uniqueOrderService.getButtonName()));
+            List<String> lore = uniqueOrderService.getButtonLore().stream()
+                    .map(ColorUtil::colorize)
+                    .collect(Collectors.toCollection(ArrayList::new));
             lore.add(" ");
-            lore.add("§eЛКМ - Оформить заказ");
+            lore.add(ColorUtil.colorize("&eЛКМ - Оформить заказ"));
             meta.setLore(lore);
             stack.setItemMeta(meta);
         }
