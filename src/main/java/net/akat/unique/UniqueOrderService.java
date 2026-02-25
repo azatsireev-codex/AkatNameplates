@@ -16,6 +16,7 @@ import java.sql.*;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.ThreadLocalRandom;
 import java.util.UUID;
 import java.util.logging.Level;
 
@@ -119,6 +120,7 @@ public class UniqueOrderService {
         if ("sqlite".equals(dbType)) {
             sql = "CREATE TABLE IF NOT EXISTS unique_nameplate_orders ("
                     + "id INTEGER PRIMARY KEY AUTOINCREMENT,"
+                    + "order_number INTEGER UNIQUE,"
                     + "player_uuid TEXT NOT NULL,"
                     + "player_name TEXT NOT NULL,"
                     + "price INTEGER NOT NULL,"
@@ -129,6 +131,7 @@ public class UniqueOrderService {
         } else if ("postgresql".equals(dbType)) {
             sql = "CREATE TABLE IF NOT EXISTS unique_nameplate_orders ("
                     + "id BIGSERIAL PRIMARY KEY,"
+                    + "order_number BIGINT UNIQUE,"
                     + "player_uuid VARCHAR(36) NOT NULL,"
                     + "player_name VARCHAR(16) NOT NULL,"
                     + "price INT NOT NULL,"
@@ -139,6 +142,7 @@ public class UniqueOrderService {
         } else {
             sql = "CREATE TABLE IF NOT EXISTS unique_nameplate_orders ("
                     + "id BIGINT AUTO_INCREMENT PRIMARY KEY,"
+                    + "order_number BIGINT UNIQUE,"
                     + "player_uuid VARCHAR(36) NOT NULL,"
                     + "player_name VARCHAR(16) NOT NULL,"
                     + "price INT NOT NULL,"
@@ -150,38 +154,83 @@ public class UniqueOrderService {
 
         try (Connection c = getConnection(); Statement st = c.createStatement()) {
             st.execute(sql);
+            ensureOrderNumberColumn(c, st);
         } catch (Exception e) {
             plugin.getLogger().log(Level.SEVERE, "Не удалось инициализировать таблицу unique_nameplate_orders", e);
         }
     }
 
-    public long createOrder(Player player) {
-        String sql = "INSERT INTO unique_nameplate_orders (player_uuid, player_name, price, status) VALUES (?, ?, ?, 'PENDING')";
-        try (Connection c = getConnection(); PreparedStatement ps = c.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
-            ps.setString(1, player.getUniqueId().toString());
-            ps.setString(2, player.getName());
-            ps.setInt(3, price);
-            ps.executeUpdate();
-            try (ResultSet rs = ps.getGeneratedKeys()) {
+    private void ensureOrderNumberColumn(Connection c, Statement st) {
+        try {
+            DatabaseMetaData meta = c.getMetaData();
+            String tableName = "unique_nameplate_orders";
+            String normalizedTable = "postgresql".equals(dbType) ? tableName.toLowerCase() : tableName;
+
+            try (ResultSet rs = meta.getColumns(null, null, normalizedTable, "order_number")) {
                 if (rs.next()) {
-                    long id = rs.getLong(1);
-                    sendEndpoint(purchaseEndpoint, id, player.getUniqueId(), player.getName());
-                    return id;
+                    return;
                 }
             }
+
+            String alterSql;
+            if ("sqlite".equals(dbType)) {
+                alterSql = "ALTER TABLE unique_nameplate_orders ADD COLUMN order_number INTEGER";
+            } else {
+                alterSql = "ALTER TABLE unique_nameplate_orders ADD COLUMN order_number BIGINT";
+            }
+
+            st.execute(alterSql);
+            st.execute("UPDATE unique_nameplate_orders SET order_number = id WHERE order_number IS NULL");
+            try {
+                st.execute("CREATE UNIQUE INDEX uq_unique_nameplate_orders_order_number ON unique_nameplate_orders(order_number)");
+            } catch (SQLException ignored) {
+                // Индекс может уже существовать, игнорируем
+            }
+        } catch (Exception e) {
+            plugin.getLogger().log(Level.WARNING, "Не удалось проверить/создать колонку order_number", e);
+        }
+    }
+
+    public long createOrder(Player player) {
+        String sql = "INSERT INTO unique_nameplate_orders (order_number, player_uuid, player_name, price, status) VALUES (?, ?, ?, ?, 'PENDING')";
+        try (Connection c = getConnection(); PreparedStatement ps = c.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+            long orderNumber = generateUniqueOrderNumber(c);
+            ps.setLong(1, orderNumber);
+            ps.setString(2, player.getUniqueId().toString());
+            ps.setString(3, player.getName());
+            ps.setInt(4, price);
+            ps.executeUpdate();
+            sendEndpoint(purchaseEndpoint, orderNumber, player.getUniqueId(), player.getName());
+            return orderNumber;
         } catch (Exception e) {
             plugin.getLogger().log(Level.SEVERE, "Не удалось создать заказ уникального ника", e);
         }
         return -1;
     }
 
+    private long generateUniqueOrderNumber(Connection c) throws SQLException {
+        String checkSql = "SELECT 1 FROM unique_nameplate_orders WHERE order_number = ?";
+        for (int i = 0; i < 20; i++) {
+            long candidate = ThreadLocalRandom.current().nextLong(100000L, 1_000_000_000L);
+            try (PreparedStatement ps = c.prepareStatement(checkSql)) {
+                ps.setLong(1, candidate);
+                try (ResultSet rs = ps.executeQuery()) {
+                    if (!rs.next()) {
+                        return candidate;
+                    }
+                }
+            }
+        }
+        throw new SQLException("Не удалось сгенерировать уникальный номер заказа");
+    }
+
     public List<UniqueOrder> getPendingOrders() {
-        String sql = "SELECT id, player_uuid, player_name, price, status, created_at FROM unique_nameplate_orders WHERE status='PENDING' ORDER BY id DESC";
+        String sql = "SELECT order_number, player_uuid, player_name, price, status, created_at FROM unique_nameplate_orders WHERE status='PENDING' ORDER BY id DESC";
         List<UniqueOrder> result = new ArrayList<>();
         try (Connection c = getConnection(); PreparedStatement ps = c.prepareStatement(sql); ResultSet rs = ps.executeQuery()) {
             while (rs.next()) {
                 result.add(new UniqueOrder(
-                        rs.getLong("id"),
+                        rs.getLong("order_number"),
                         UUID.fromString(rs.getString("player_uuid")),
                         rs.getString("player_name"),
                         rs.getInt("price"),
@@ -197,8 +246,8 @@ public class UniqueOrderService {
     }
 
     public boolean completeOrder(long orderId, String adminName) {
-        String fetch = "SELECT player_uuid, player_name FROM unique_nameplate_orders WHERE id=? AND status='PENDING'";
-        String update = "UPDATE unique_nameplate_orders SET status='COMPLETED', completed_at=CURRENT_TIMESTAMP WHERE id=? AND status='PENDING'";
+        String fetch = "SELECT player_uuid, player_name FROM unique_nameplate_orders WHERE order_number=? AND status='PENDING'";
+        String update = "UPDATE unique_nameplate_orders SET status='COMPLETED', completed_at=CURRENT_TIMESTAMP WHERE order_number=? AND status='PENDING'";
 
         try (Connection c = getConnection()) {
             String playerUuid = null;
@@ -233,8 +282,8 @@ public class UniqueOrderService {
 
 
     public boolean deleteOrderWithRefund(long orderId, String adminName) {
-        String fetch = "SELECT player_uuid, player_name, price FROM unique_nameplate_orders WHERE id=? AND status='PENDING'";
-        String delete = "DELETE FROM unique_nameplate_orders WHERE id=? AND status='PENDING'";
+        String fetch = "SELECT player_uuid, player_name, price FROM unique_nameplate_orders WHERE order_number=? AND status='PENDING'";
+        String delete = "DELETE FROM unique_nameplate_orders WHERE order_number=? AND status='PENDING'";
 
         try (Connection c = getConnection()) {
             String playerName = null;
