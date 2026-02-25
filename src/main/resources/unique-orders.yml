@@ -18,7 +18,7 @@ endpoints:
   complete: "http://127.0.0.1:8080/api/unique-order/completed"
 
 database:
-  # mariadb | sqlite
+  # mariadb | sqlite | postgresql
   type: "mariadb"
 
   # Настройки MariaDB (используются когда type: mariadb)
@@ -31,3 +31,6 @@ database:
   # Настройки SQLite (используются когда type: sqlite)
   sqlite:
     file: "unique-orders.db"
+
+  # Настройки PostgreSQL (используются когда type: postgresql)
+  # host/port/name/user/password используются из общих полей выше

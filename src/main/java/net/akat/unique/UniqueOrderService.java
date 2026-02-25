@@ -85,6 +85,14 @@ public class UniqueOrderService {
             dbUrl = "jdbc:sqlite:" + sqliteFile.getAbsolutePath();
             dbUser = "";
             dbPassword = "";
+        } else if (dbType.equals("postgresql") || dbType.equals("postgres")) {
+            String host = config.getString("database.host", "127.0.0.1");
+            int port = config.getInt("database.port", 5432);
+            String database = config.getString("database.name", "nameplates");
+            dbUser = config.getString("database.user", "postgres");
+            dbPassword = config.getString("database.password", "");
+            dbUrl = "jdbc:postgresql://" + host + ":" + port + "/" + database;
+            dbType = "postgresql";
         } else {
             String host = config.getString("database.host", "127.0.0.1");
             int port = config.getInt("database.port", 3306);
@@ -117,6 +125,16 @@ public class UniqueOrderService {
                     + "status TEXT NOT NULL DEFAULT 'PENDING',"
                     + "created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,"
                     + "completed_at DATETIME NULL"
+                    + ")";
+        } else if ("postgresql".equals(dbType)) {
+            sql = "CREATE TABLE IF NOT EXISTS unique_nameplate_orders ("
+                    + "id BIGSERIAL PRIMARY KEY,"
+                    + "player_uuid VARCHAR(36) NOT NULL,"
+                    + "player_name VARCHAR(16) NOT NULL,"
+                    + "price INT NOT NULL,"
+                    + "status VARCHAR(32) NOT NULL DEFAULT 'PENDING',"
+                    + "created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,"
+                    + "completed_at TIMESTAMP NULL"
                     + ")";
         } else {
             sql = "CREATE TABLE IF NOT EXISTS unique_nameplate_orders ("
