@@ -29,4 +29,12 @@ public class JoinQuitMessageOption {
     public String getJoinMessage() { return joinMessage; }
     public String getQuitMessage() { return quitMessage; }
     public Material getIcon() { return icon; }
+
+    public boolean hasPointsPayment() {
+        return pointsPrice > 0;
+    }
+
+    public boolean hasNeftPayment() {
+        return neftPrice > 0;
+    }
 }

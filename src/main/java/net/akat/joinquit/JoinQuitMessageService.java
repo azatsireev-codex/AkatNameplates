@@ -116,6 +116,40 @@ public class JoinQuitMessageService {
         return slots;
     }
 
+    public List<String> getOptionLoreTemplate() {
+        List<String> lore = config.getStringList("menu.option-lore");
+        if (lore == null || lore.isEmpty()) {
+            return Arrays.asList(
+                    "&7Вход: {join}",
+                    "&7Выход: {quit}",
+                    " ",
+                    "{price}",
+                    "{click-action}"
+            );
+        }
+        return lore;
+    }
+
+    public String getPurchasedClickActionText() {
+        return config.getString("menu.purchased-click-action", "&eЛКМ - Активировать");
+    }
+
+    public String getUnpurchasedClickActionText() {
+        return config.getString("menu.unpurchased-click-action", "&eЛКМ - Купить/активировать");
+    }
+
+    public String getNeftPriceFormat() {
+        return config.getString("menu.price-formats.neft", "&a{amount} нефткоинов");
+    }
+
+    public String getPointsPriceFormat() {
+        return config.getString("menu.price-formats.points", "&b{amount} кубиславов");
+    }
+
+    public String getBothPriceFormat() {
+        return config.getString("menu.price-formats.both", "&7Цена: {points} &7или {neft}");
+    }
+
     public JoinQuitMessageOption getOption(String id) {
         for (JoinQuitMessageOption option : options) {
             if (option.getId().equalsIgnoreCase(id)) return option;
@@ -167,27 +201,47 @@ public class JoinQuitMessageService {
             return true;
         }
 
-        if (option.getPointsPrice() > 0) {
-            if (pointaucAPI == null) {
-                player.sendMessage("§cPointAuc API недоступно.");
-                return false;
-            }
-            boolean removed = pointaucAPI.removePoints(player.getUniqueId(), option.getPointsPrice());
-            if (!removed) {
-                player.sendMessage("§cНедостаточно кубиславов!");
-                return false;
-            }
+        if (!option.hasPointsPayment() && !option.hasNeftPayment()) {
+            player.sendMessage("§cДля этого набора не настроена цена.");
+            return false;
         }
 
-        if (option.getNeftPrice() > 0) {
-            boolean ok = balanceClient.withdraw(player.getName(), option.getNeftPrice());
-            if (!ok) {
-                if (option.getPointsPrice() > 0 && pointaucAPI != null) {
-                    pointaucAPI.addPoints(player.getUniqueId(), option.getPointsPrice());
-                }
-                player.sendMessage("§cНедостаточно нефткоинов!");
-                return false;
+        if (option.hasPointsPayment() && option.hasNeftPayment()) {
+            if (tryPurchaseWithPoints(player, option)) {
+                return true;
             }
+            return tryPurchaseWithNeft(player, option);
+        }
+
+        if (option.hasPointsPayment()) {
+            return tryPurchaseWithPoints(player, option);
+        }
+
+        return tryPurchaseWithNeft(player, option);
+    }
+
+    private boolean tryPurchaseWithPoints(Player player, JoinQuitMessageOption option) {
+        if (pointaucAPI == null) {
+            player.sendMessage("§cPointAuc API недоступно.");
+            return false;
+        }
+
+        boolean removed = pointaucAPI.removePoints(player.getUniqueId(), option.getPointsPrice());
+        if (!removed) {
+            player.sendMessage("§cНедостаточно кубиславов!");
+            return false;
+        }
+
+        grantPermission(player, option.getPermission());
+        setActiveMessage(player.getUniqueId(), option.getId());
+        return true;
+    }
+
+    private boolean tryPurchaseWithNeft(Player player, JoinQuitMessageOption option) {
+        boolean ok = balanceClient.withdraw(player.getName(), option.getNeftPrice());
+        if (!ok) {
+            player.sendMessage("§cНедостаточно нефткоинов!");
+            return false;
         }
 
         grantPermission(player, option.getPermission());
