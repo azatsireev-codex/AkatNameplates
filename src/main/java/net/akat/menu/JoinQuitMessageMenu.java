@@ -9,6 +9,7 @@ import net.akat.util.ClickLimiter;
 import net.akat.util.ColorUtil;
 import net.md_5.bungee.api.ChatColor;
 import org.bukkit.entity.Player;
+import org.bukkit.event.inventory.ClickType;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
@@ -89,7 +90,16 @@ public class JoinQuitMessageMenu {
 
         return new SGButton(stack).withListener(ClickLimiter.wrapWithLimit(e -> {
             e.setCancelled(true);
-            boolean ok = service.purchaseOrActivate(player, option);
+
+            boolean ok;
+            if (player.hasPermission(option.getPermission())) {
+                ok = service.activateIfPurchased(player, option);
+            } else if (e.getClick() == ClickType.RIGHT) {
+                ok = service.purchaseWithNeft(player, option);
+            } else {
+                ok = service.purchaseWithPoints(player, option);
+            }
+
             if (ok) {
                 player.sendMessage("§aСообщение входа/выхода активировано: §e" + option.getId());
             }

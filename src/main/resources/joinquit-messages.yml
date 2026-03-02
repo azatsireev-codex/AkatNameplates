@@ -9,7 +9,7 @@ menu:
     - "{price}"
     - "{click-action}"
   purchased-click-action: "&eЛКМ - Активировать"
-  unpurchased-click-action: "&eЛКМ - Купить/активировать"
+  unpurchased-click-action: "&eЛКМ - Купить за кубиславы\n&eПКМ - Купить за нефткоины"
   price-formats:
     points: "&b{amount} кубиславов"
     neft: "&a{amount} нефткоинов"

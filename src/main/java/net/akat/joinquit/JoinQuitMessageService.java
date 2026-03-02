@@ -206,26 +206,35 @@ public class JoinQuitMessageService {
         }
     }
 
-    public boolean purchaseOrActivate(Player player, JoinQuitMessageOption option) {
-        if (player.hasPermission(option.getPermission())) {
-            setActiveMessage(player.getUniqueId(), option.getId());
-            return true;
+    public boolean activateIfPurchased(Player player, JoinQuitMessageOption option) {
+        if (!player.hasPermission(option.getPermission())) {
+            return false;
         }
+        setActiveMessage(player.getUniqueId(), option.getId());
+        return true;
+    }
 
-        if (!option.hasPointsPayment() && !option.hasNeftPayment()) {
-            player.sendMessage("§cДля этого набора не настроена цена.");
+    public boolean purchaseWithPoints(Player player, JoinQuitMessageOption option) {
+        if (!option.hasPointsPayment()) {
+            player.sendMessage("§cПокупка этого набора за кубиславы недоступна.");
             return false;
         }
 
-        if (option.hasPointsPayment() && option.hasNeftPayment()) {
-            if (tryPurchaseWithPoints(player, option)) {
-                return true;
-            }
-            return tryPurchaseWithNeft(player, option);
+        if (activateIfPurchased(player, option)) {
+            return true;
         }
 
-        if (option.hasPointsPayment()) {
-            return tryPurchaseWithPoints(player, option);
+        return tryPurchaseWithPoints(player, option);
+    }
+
+    public boolean purchaseWithNeft(Player player, JoinQuitMessageOption option) {
+        if (!option.hasNeftPayment()) {
+            player.sendMessage("§cПокупка этого набора за нефткоины недоступна.");
+            return false;
+        }
+
+        if (activateIfPurchased(player, option)) {
+            return true;
         }
 
         return tryPurchaseWithNeft(player, option);
