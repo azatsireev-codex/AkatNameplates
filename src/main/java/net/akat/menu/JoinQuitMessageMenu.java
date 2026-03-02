@@ -29,7 +29,7 @@ public class JoinQuitMessageMenu {
     public void open(Player player) {
         SGMenu menu = spiGUI.create(ChatColor.translateAlternateColorCodes('&', service.getMenuTitle()), service.getMenuRows());
 
-        List<JoinQuitMessageOption> options = service.getOptions();
+        List<JoinQuitMessageOption> options = service.getVisibleOptions(player);
         List<Integer> slots = service.getMenuSlots();
 
         for (int i = 0; i < options.size() && i < slots.size(); i++) {
@@ -62,7 +62,11 @@ public class JoinQuitMessageMenu {
                         .replace("{quit}", option.getQuitMessage().replace("{player}", player.getName()))
                         .replace("{price}", priceText)
                         .replace("{click-action}", clickAction);
-                lore.add(ColorUtil.colorize(formatted));
+
+                String[] loreLines = formatted.split("\\n");
+                for (String loreLine : loreLines) {
+                    lore.add(ColorUtil.colorize(loreLine));
+                }
             }
 
             if (purchased) {

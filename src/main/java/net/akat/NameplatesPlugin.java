@@ -96,6 +96,8 @@ public class NameplatesPlugin extends JavaPlugin {
         );
         Objects.requireNonNull(getCommand("akatnameplates")).setExecutor(command);
         Objects.requireNonNull(getCommand("akatnameplates")).setTabCompleter(command);
+        Objects.requireNonNull(getCommand("akatmessages")).setExecutor(command);
+        Objects.requireNonNull(getCommand("akatmessagesreload")).setExecutor(command);
 
         getServer().getPluginManager().registerEvents(new JoinQuitMessageListener(joinQuitMessageService), this);
     }

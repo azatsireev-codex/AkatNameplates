@@ -13,7 +13,9 @@ menu:
   price-formats:
     points: "&b{amount} кубиславов"
     neft: "&a{amount} нефткоинов"
-    both: "&7Цена: {points} &7или {neft}"
+    both: "&7Цена:
+{points}
+{neft}"
 
 messages:
   default_plus:
@@ -21,6 +23,7 @@ messages:
     neft-price: 100
     points-price: 100 # Если указаны оба >0, игрок может купить за любую из валют
     icon: "PAPER"
+    hidden-from-shop: false
     join: "<gradient:#55ff55:#00aa00>+ {player}</gradient>"
     quit: "<gradient:#ff5555:#aa0000>- {player}</gradient>"
 
@@ -29,6 +32,7 @@ messages:
     neft-price: 500
     points-price: 0 # Только нефткоины
     icon: "BOOK"
+    hidden-from-shop: true # Скрыт из общего списка, но виден игрокам с permission
     join: "#ffd700✦ &f{player} &7воссиял на сервере"
     quit: "#ffd700✦ &f{player} &7покинул королевство"
 

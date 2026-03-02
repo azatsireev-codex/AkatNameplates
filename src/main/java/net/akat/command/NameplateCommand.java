@@ -49,6 +49,16 @@ public class NameplateCommand implements CommandExecutor, TabCompleter {
 
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
+        String commandName = command.getName().toLowerCase();
+
+        if (commandName.equals("akatmessages") || commandName.equals("nmsg")) {
+            return handleMessagesCommand(sender);
+        }
+
+        if (commandName.equals("akatmessagesreload") || commandName.equals("nmsgreload")) {
+            return handleMessagesReloadCommand(sender);
+        }
+
         // Проверяем, какая команда была использована
         boolean isShortCommand = label.equalsIgnoreCase("anp") ||
                 label.equalsIgnoreCase("np") ||
@@ -61,7 +71,7 @@ public class NameplateCommand implements CommandExecutor, TabCompleter {
                 purchaseMenu.open((Player) sender);
                 return true;
             } else {
-                sender.sendMessage(ChatColor.RED + "Использование: /" + label + " <shop|my|admin|messages> [игрок]");
+                sender.sendMessage(ChatColor.RED + "Использование: /" + label + " <shop|my|admin|messages|messagesreload> [игрок]");
                 sender.sendMessage(ChatColor.RED + "Или: /" + label + " reload");
                 return false;
             }
@@ -80,13 +90,19 @@ public class NameplateCommand implements CommandExecutor, TabCompleter {
                 return handleUniqueOrdersCommand(sender);
 
             case "messages":
+            case "msg":
+            case "m":
                 return handleMessagesCommand(sender);
+
+            case "messagesreload":
+            case "mreload":
+                return handleMessagesReloadCommand(sender);
 
             default:
                 // Показываем разный хелп в зависимости от команды
                 String cmd = isShortCommand ? label : "akatnameplates";
                 if (sender.hasPermission("akatnameplates.admin")) {
-                    sender.sendMessage(ChatColor.RED + "Использование: /" + cmd + " <shop|my|admin|messages> [игрок]");
+                    sender.sendMessage(ChatColor.RED + "Использование: /" + cmd + " <shop|my|admin|messages|messagesreload> [игрок]");
                     sender.sendMessage(ChatColor.RED + "Или: /" + cmd + " reload");
                 } else {
                     sender.sendMessage(ChatColor.RED + "Использование: /" + cmd + " [shop|my]");
@@ -178,6 +194,18 @@ public class NameplateCommand implements CommandExecutor, TabCompleter {
     }
 
 
+    private boolean handleMessagesReloadCommand(CommandSender sender) {
+        if (!sender.hasPermission("akatnameplates.reload")) {
+            sender.sendMessage(ChatColor.RED + "У вас нет прав на эту команду!");
+            return false;
+        }
+
+        joinQuitMessageService.reload();
+        sender.sendMessage(ChatColor.GREEN + "Конфигурация сообщений входа/выхода перезагружена!");
+        return true;
+    }
+
+
     private boolean handleUniqueOrdersCommand(CommandSender sender) {
         if (!(sender instanceof Player player)) {
             sender.sendMessage(ChatColor.RED + "Команда доступна только игрокам.");
@@ -214,7 +242,7 @@ public class NameplateCommand implements CommandExecutor, TabCompleter {
         List<String> completions = new ArrayList<>();
 
         if (args.length == 1) {
-            List<String> allCommands = Arrays.asList("shop", "my", "reload", "admin", "messages");
+            List<String> allCommands = Arrays.asList("shop", "my", "reload", "admin", "messages", "msg", "m", "messagesreload", "mreload");
 
             for (String cmd : allCommands) {
                 if (cmd.startsWith(args[0].toLowerCase())) {
@@ -260,7 +288,13 @@ public class NameplateCommand implements CommandExecutor, TabCompleter {
                 return sender.hasPermission("akatnameplates.uniqueorders") || sender.hasPermission("akatnameplates.admin");
 
             case "messages":
+            case "msg":
+            case "m":
                 return sender.hasPermission("akatnameplates.use");
+
+            case "messagesreload":
+            case "mreload":
+                return sender.hasPermission("akatnameplates.reload");
 
             default:
                 return false;

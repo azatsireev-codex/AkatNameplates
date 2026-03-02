@@ -65,7 +65,8 @@ public class JoinQuitMessageService {
                 String quitMessage = section.getString("quit", "&c- &f{player}");
                 Material icon = Material.matchMaterial(section.getString("icon", "PAPER"));
                 if (icon == null) icon = Material.PAPER;
-                options.add(new JoinQuitMessageOption(id, permission, neftPrice, pointsPrice, joinMessage, quitMessage, icon));
+                boolean hiddenFromShop = section.getBoolean("hidden-from-shop", false);
+                options.add(new JoinQuitMessageOption(id, permission, neftPrice, pointsPrice, joinMessage, quitMessage, icon, hiddenFromShop));
             }
         }
 
@@ -108,6 +109,16 @@ public class JoinQuitMessageService {
 
     public List<JoinQuitMessageOption> getOptions() { return new ArrayList<>(options); }
 
+    public List<JoinQuitMessageOption> getVisibleOptions(Player player) {
+        List<JoinQuitMessageOption> visible = new ArrayList<>();
+        for (JoinQuitMessageOption option : options) {
+            if (!option.isHiddenFromShop() || player.hasPermission(option.getPermission())) {
+                visible.add(option);
+            }
+        }
+        return visible;
+    }
+
     public String getMenuTitle() { return config.getString("menu.title", "&8Сообщения входа/выхода"); }
     public int getMenuRows() { return Math.max(1, Math.min(6, config.getInt("menu.rows", 6))); }
     public List<Integer> getMenuSlots() {
@@ -147,7 +158,7 @@ public class JoinQuitMessageService {
     }
 
     public String getBothPriceFormat() {
-        return config.getString("menu.price-formats.both", "&7Цена: {points} &7или {neft}");
+        return config.getString("menu.price-formats.both", "&7Цена:\n{points}\n{neft}");
     }
 
     public JoinQuitMessageOption getOption(String id) {

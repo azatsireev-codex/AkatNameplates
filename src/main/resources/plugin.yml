@@ -20,6 +20,15 @@ commands:
       /anp my - открыть список купленных табличек
       /anp admin - меню заказов уникальных ников (админ)
       /anp messages - меню сообщений входа/выхода
+      /anp messagesreload - перезагрузить конфиг сообщений входа/выхода
+  akatmessages:
+    description: Открыть меню сообщений входа/выхода
+    aliases: [nmsg]
+    usage: /akatmessages
+  akatmessagesreload:
+    description: Перезагрузить конфиг сообщений входа/выхода
+    aliases: [nmsgreload]
+    usage: /akatmessagesreload
 
 permissions:
   akatnameplates.use:
