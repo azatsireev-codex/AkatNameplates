@@ -46,7 +46,7 @@ public class JoinQuitMessageMenu {
         ItemMeta meta = stack.getItemMeta();
 
         if (meta != null) {
-            meta.setDisplayName(ColorUtil.colorize("&e" + option.getId()));
+            meta.setDisplayName(ColorUtil.colorize("&e" + option.getDisplayName()));
 
             boolean purchased = player.hasPermission(option.getPermission());
 

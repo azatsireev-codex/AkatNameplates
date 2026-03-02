@@ -66,7 +66,8 @@ public class JoinQuitMessageService {
                 Material icon = Material.matchMaterial(section.getString("icon", "PAPER"));
                 if (icon == null) icon = Material.PAPER;
                 boolean hiddenFromShop = section.getBoolean("hidden-from-shop", false);
-                options.add(new JoinQuitMessageOption(id, permission, neftPrice, pointsPrice, joinMessage, quitMessage, icon, hiddenFromShop));
+                String date = section.getString("date", "");
+                options.add(new JoinQuitMessageOption(id, permission, neftPrice, pointsPrice, joinMessage, quitMessage, icon, hiddenFromShop, date));
             }
         }
 
