@@ -18,6 +18,17 @@ commands:
       /anp - открыть магазин
       /anp shop - открыть магазин покупки
       /anp my - открыть список купленных табличек
+      /anp admin - меню заказов уникальных ников (админ)
+      /anp messages - меню сообщений входа/выхода
+      /anp messagesreload - перезагрузить конфиг сообщений входа/выхода
+  akatmessages:
+    description: Открыть меню сообщений входа/выхода
+    aliases: [nmsg]
+    usage: /akatmessages
+  akatmessagesreload:
+    description: Перезагрузить конфиг сообщений входа/выхода
+    aliases: [nmsgreload]
+    usage: /akatmessagesreload
 
 permissions:
   akatnameplates.use:
@@ -28,4 +39,7 @@ permissions:
     default: op
   akatnameplates.reload:
     description: Позволяет перезагружать конфиг табличек
+    default: op
+  akatnameplates.uniqueorders:
+    description: Позволяет открывать меню заказов уникальных ников
     default: op

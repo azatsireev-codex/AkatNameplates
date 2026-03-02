@@ -1,0 +1,16 @@
+packs:
+  # Пример:
+  # "Мистика":
+  #   model: "minecraft:your_model_key"
+  #   after-general: true # Показывать этот пак сразу после пакета "Общие"
+
+buttons:
+  # Модели для кнопок меню паков (формат namespace:key)
+  # donate-info: "minecraft:donate_button"
+  # preview-current: "minecraft:preview_current_button"
+  # back: "minecraft:back_button"
+  # previous-page: "minecraft:previous_page_button"
+  # next-page: "minecraft:next_page_button"
+  # unequip: "minecraft:unequip_button"
+  # packs-previous-page: "minecraft:packs_prev_button"
+  # packs-next-page: "minecraft:packs_next_button"

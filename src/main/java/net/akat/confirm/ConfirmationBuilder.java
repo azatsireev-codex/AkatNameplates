@@ -2,9 +2,13 @@ package net.akat.confirm;
 
 import net.akat.NameplateItem;
 import net.akat.confirm.actions.PurchaseAction;
+import net.akat.confirm.actions.UniqueOrderPurchaseAction;
+import net.akat.confirm.actions.UniqueOrderCompleteAction;
+import net.akat.confirm.actions.UniqueOrderDeleteRefundAction;
 import net.akat.confirm.managers.ConfirmationManager;
 import net.akat.confirm.managers.ConfirmationPromise;
 import net.akat.service.NameplateActions;
+import net.akat.unique.UniqueOrderService;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 import org.bukkit.entity.Player;
@@ -35,4 +39,21 @@ public class ConfirmationBuilder {
     public static ConfirmationPromise sendPurchase(Player player, NameplateItem item, NameplateActions actions) {
         return send(player, new PurchaseAction(item, actions), 30);
     }
+
+    public static ConfirmationPromise sendUniqueOrderPurchase(Player player, NameplateActions actions, int timeoutSeconds) {
+        return send(player, new UniqueOrderPurchaseAction(actions), timeoutSeconds);
+    }
+
+
+    public static ConfirmationPromise sendUniqueOrderComplete(Player admin, UniqueOrderService service, long orderId) {
+        admin.sendMessage(MINI.deserialize("<yellow>Подтвердите завершение заказа:</yellow> <white>#" + orderId + "</white>"));
+        return send(admin, new UniqueOrderCompleteAction(service, orderId), 30);
+    }
+
+    public static ConfirmationPromise sendUniqueOrderDeleteWithRefund(Player admin, UniqueOrderService service, long orderId) {
+        admin.sendMessage(MINI.deserialize("<red>Подтвердите удаление заказа с возвратом:</red> <white>#" + orderId + "</white>"));
+        return send(admin, new UniqueOrderDeleteRefundAction(service, orderId), 30);
+    }
 }
+
+

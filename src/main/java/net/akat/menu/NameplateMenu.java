@@ -12,11 +12,14 @@ import net.akat.confirm.managers.ConfirmationPromise;
 import net.akat.service.NameplateActions;
 import net.akat.util.ClickLimiter;
 import net.akat.util.ColorUtil;
+import net.akat.unique.UniqueOrderService;
 import net.luckperms.api.LuckPerms;
 import net.luckperms.api.LuckPermsProvider;
 import net.luckperms.api.model.user.User;
 import net.luckperms.api.node.Node;
 import net.md_5.bungee.api.ChatColor;
+import net.md_5.bungee.api.chat.ClickEvent;
+import net.md_5.bungee.api.chat.TextComponent;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
@@ -33,29 +36,33 @@ public class NameplateMenu {
     private final SpiGUI spiGUI;
     private final List<NameplateItem> allItems;
     private final LuckPerms luckPerms;
-    private final String menuTitle;
-    private final int menuRows;
+    private final String packsMenuTitle;
+    private final int packsMenuRows;
+    private final String nameplatesMenuTitle;
+    private final int nameplatesMenuRows;
     private final NameplateActions actions;
+    private final Map<String, String> packModels;
+    private final Map<String, String> buttonModels;
+    private final Set<String> packsAfterGeneral;
+    private final UniqueOrderService uniqueOrderService;
 
-    private static final int PREVIOUS_PAGE_SLOT = 45;
-    private static final int NEXT_PAGE_SLOT = 53;
-    private static final int BACK_BUTTON_SLOT = 49;
-    private static final int EQUIP_ALL_BUTTON_SLOT = 48;
-    private static final int UNEQUIP_SLOT_MAIN = 48;
-    private static final int CURRENT_NICK_SLOT = 50;
+    private final int packsMenuInfoSlot;
+    private final int packsMenuPreviewSlot;
+    private final int packsMenuUnequipSlot;
+    private final int packsMenuPreviousSlot;
+    private final int packsMenuNextSlot;
 
-    private static final int[] PACK_SLOTS = {
-            10, 11, 12, 13, 14, 15, 16,
-            19, 20, 21, 22, 23, 24, 25
-    };
+    private final int nameplatesMenuBackSlot;
+    private final int nameplatesMenuUnequipSlot;
+    private final int nameplatesMenuPreviousSlot;
+    private final int nameplatesMenuNextSlot;
 
-    private static final int[] ITEM_SLOTS = {
-            10, 11, 12, 13, 14, 15, 16,
-            19, 20, 21, 22, 23, 24, 25,
-            28, 29, 30, 31, 32, 33, 34
-    };
+    private final String donateUrl;
+    private final int[] packSlots;
+    private final int[] itemSlots;
 
     private final Map<UUID, Integer> playerPages = new HashMap<>();
+    private final Map<UUID, Integer> playerPackMenuPages = new HashMap<>();
     private final Map<UUID, String> playerCurrentPack = new HashMap<>();
 
     private final Map<String, List<NameplateItem>> packItemsCache = new HashMap<>();
@@ -65,22 +72,52 @@ public class NameplateMenu {
         final String name;
         final Material material;
         final List<String> lore;
+        final String model;
 
-        PackInfo(String name, Material material, List<String> lore) {
+        PackInfo(String name, Material material, List<String> lore, String model) {
             this.name = name;
             this.material = material;
             this.lore = lore;
+            this.model = model;
         }
     }
 
     public NameplateMenu(SpiGUI spiGUI, List<NameplateItem> items,
-                         String menuTitle, int menuRows, NameplateActions actions) {
+                         String packsMenuTitle, int packsMenuRows,
+                         String nameplatesMenuTitle, int nameplatesMenuRows,
+                         int packsMenuInfoSlot, int packsMenuPreviewSlot, int packsMenuUnequipSlot,
+                         int packsMenuPreviousSlot, int packsMenuNextSlot,
+                         int nameplatesMenuBackSlot, int nameplatesMenuUnequipSlot,
+                         int nameplatesMenuPreviousSlot, int nameplatesMenuNextSlot,
+                         String donateUrl, List<Integer> packSlots, List<Integer> itemSlots,
+                         NameplateActions actions,
+                         Map<String, String> packModels, Map<String, String> buttonModels,
+                         Set<String> packsAfterGeneral,
+                         UniqueOrderService uniqueOrderService) {
         this.spiGUI = spiGUI;
         this.allItems = items;
         this.luckPerms = LuckPermsProvider.get();
-        this.menuTitle = menuTitle;
-        this.menuRows = menuRows;
+        this.packsMenuTitle = packsMenuTitle;
+        this.packsMenuRows = packsMenuRows;
+        this.nameplatesMenuTitle = nameplatesMenuTitle;
+        this.nameplatesMenuRows = nameplatesMenuRows;
+        this.packsMenuInfoSlot = packsMenuInfoSlot;
+        this.packsMenuPreviewSlot = packsMenuPreviewSlot;
+        this.packsMenuUnequipSlot = packsMenuUnequipSlot;
+        this.packsMenuPreviousSlot = packsMenuPreviousSlot;
+        this.packsMenuNextSlot = packsMenuNextSlot;
+        this.nameplatesMenuBackSlot = nameplatesMenuBackSlot;
+        this.nameplatesMenuUnequipSlot = nameplatesMenuUnequipSlot;
+        this.nameplatesMenuPreviousSlot = nameplatesMenuPreviousSlot;
+        this.nameplatesMenuNextSlot = nameplatesMenuNextSlot;
+        this.donateUrl = donateUrl;
+        this.packSlots = packSlots.stream().mapToInt(Integer::intValue).toArray();
+        this.itemSlots = itemSlots.stream().mapToInt(Integer::intValue).toArray();
         this.actions = actions;
+        this.packModels = new HashMap<>(packModels);
+        this.buttonModels = new HashMap<>(buttonModels);
+        this.packsAfterGeneral = new LinkedHashSet<>(packsAfterGeneral);
+        this.uniqueOrderService = uniqueOrderService;
 
         initPackCache();
     }
@@ -100,51 +137,106 @@ public class NameplateMenu {
 
             // Если это первый ники в пакете, создаем базовую информацию о пакете
             if (!packInfoCache.containsKey(packName)) {
-                Material material = item.getMaterial() != Material.NAME_TAG ?
-                        item.getMaterial() : Material.CHEST;
+                Material material = Material.CHEST;
                 List<String> lore = new ArrayList<>();
+                String model = packModels.get(packName);
 
-                packInfoCache.put(packName, new PackInfo(packName, material, lore));
+                packInfoCache.put(packName, new PackInfo(packName, material, lore, model));
             }
         }
     }
 
     public void open(Player player) {
-        openMainMenu(player);
+        playerCurrentPack.remove(player.getUniqueId());
+        playerPages.remove(player.getUniqueId());
+        openMainMenu(player, 0);
     }
 
-    private void openMainMenu(Player player) {
+    private void openMainMenu(Player player, int page) {
         // Очищаем текущий пакет игрока
         playerCurrentPack.remove(player.getUniqueId());
         playerPages.remove(player.getUniqueId());
 
         // Получаем список уникальных пакетов
-        List<String> packs = new ArrayList<>(packItemsCache.keySet());
+        List<String> packs = new ArrayList<>();
+        for (String packName : packItemsCache.keySet()) {
+            List<NameplateItem> packItems = packItemsCache.getOrDefault(packName, Collections.emptyList());
+            if (packHasVisibleItemsForPlayer(player, packItems)
+                    || (uniqueOrderService.isEnabled() && packName.equalsIgnoreCase(uniqueOrderService.getPackName()))) {
+                packs.add(packName);
+            }
+        }
+
+        packs.sort((left, right) -> {
+            boolean leftAfterGeneral = packsAfterGeneral.contains(left);
+            boolean rightAfterGeneral = packsAfterGeneral.contains(right);
+            boolean leftIsGeneral = left.equalsIgnoreCase("Общие");
+            boolean rightIsGeneral = right.equalsIgnoreCase("Общие");
+
+            int leftGroup = leftIsGeneral ? 0 : (leftAfterGeneral ? 1 : 2);
+            int rightGroup = rightIsGeneral ? 0 : (rightAfterGeneral ? 1 : 2);
+            if (leftGroup != rightGroup) {
+                return Integer.compare(leftGroup, rightGroup);
+            }
+
+            int leftCount = packItemsCache.getOrDefault(left, Collections.emptyList()).size();
+            int rightCount = packItemsCache.getOrDefault(right, Collections.emptyList()).size();
+
+            int byCount = Integer.compare(rightCount, leftCount);
+            if (byCount != 0) {
+                return byCount;
+            }
+            return left.compareToIgnoreCase(right);
+        });
 
         // Создаем главное меню
         SGMenu menu = spiGUI.create(
-                ChatColor.translateAlternateColorCodes('&', menuTitle),
-                menuRows
+                ChatColor.translateAlternateColorCodes('&', packsMenuTitle),
+                packsMenuRows
         );
 
-        // Добавляем пакеты в меню
-        int packIndex = 0;
-        for (String packName : packs) {
-            if (packIndex >= PACK_SLOTS.length) break;
+        int packsPerPage = packSlots.length;
+        int totalPages = (int) Math.ceil((double) packs.size() / packsPerPage);
+        if (totalPages == 0) {
+            totalPages = 1;
+        }
+        if (page < 0) {
+            page = 0;
+        }
+        if (page >= totalPages) {
+            page = totalPages - 1;
+        }
+        playerPackMenuPages.put(player.getUniqueId(), page);
 
+        // Добавляем пакеты в меню
+        int startIndex = page * packsPerPage;
+        int endIndex = Math.min(startIndex + packsPerPage, packs.size());
+        int packIndex = 0;
+        for (int i = startIndex; i < endIndex; i++) {
+            String packName = packs.get(i);
             PackInfo packInfo = packInfoCache.get(packName);
             List<NameplateItem> packItems = packItemsCache.get(packName);
 
             // Создаем кнопку пакета
-            menu.setButton(PACK_SLOTS[packIndex], createPackButton(packInfo, packItems, player));
+            menu.setButton(packSlots[packIndex], createPackButton(packInfo, packItems, player));
             packIndex++;
         }
 
         if (hasAnyPurchasedItemGlobally(player)) {
-            menu.setButton(UNEQUIP_SLOT_MAIN, createUnequipButton(player));
+            menu.setButton(packsMenuUnequipSlot, createUnequipButton(player));
         }
 
-        menu.setButton(CURRENT_NICK_SLOT, createPreviewCurrentButton(player));
+        menu.setButton(packsMenuPreviewSlot, createPreviewCurrentButton(player));
+        menu.setButton(packsMenuInfoSlot, createDonateInfoButton(player));
+
+        if (totalPages > 1) {
+            if (page > 0) {
+                menu.setButton(packsMenuPreviousSlot, createPacksPreviousPageButton(player, page - 1));
+            }
+            if (page < totalPages - 1) {
+                menu.setButton(packsMenuNextSlot, createPacksNextPageButton(player, page + 1));
+            }
+        }
 
         player.openInventory(menu.getInventory());
     }
@@ -154,7 +246,12 @@ public class NameplateMenu {
         ItemMeta meta = stack.getItemMeta();
 
         if (meta != null) {
-            meta.setDisplayName(ChatColor.YELLOW + packInfo.name);
+            int newItemsCount = countNewItems(packItems);
+            String displayName = ChatColor.YELLOW + packInfo.name;
+            if (newItemsCount > 0) {
+                displayName = displayName + ChatColor.GRAY + " " + ChatColor.WHITE + "\uE063";
+            }
+            meta.setDisplayName(displayName);
 
             List<String> lore = new ArrayList<>(packInfo.lore);
             lore.add(" ");
@@ -174,10 +271,8 @@ public class NameplateMenu {
                 }
             }
 
-            lore.add("§7Всего ников: §a" + totalItems);
             lore.add("§7Куплено: §e" + purchasedItems + "§7/§a" + totalItems);
             lore.add(" ");
-
             // Процент заполнения
             double percentage = totalItems > 0 ?
                     (double) purchasedItems / totalItems * 100 : 0;
@@ -186,12 +281,121 @@ public class NameplateMenu {
             lore.add("§eНажмите для просмотра");
 
             meta.setLore(lore);
+            applyModel(meta, packInfo.model, "пака " + packInfo.name);
             stack.setItemMeta(meta);
         }
 
         return new SGButton(stack).withListener(ClickLimiter.wrapWithLimit(e -> {
             e.setCancelled(true);
             openPackMenu(player, packInfo.name, 0);
+        }));
+    }
+
+    private int countNewItems(List<NameplateItem> packItems) {
+        int count = 0;
+        for (NameplateItem item : packItems) {
+            if (!item.isHiddenInShop() && item.shouldAddSymbol()) {
+                count++;
+            }
+        }
+        return count;
+    }
+
+    private void applyConfiguredButtonModel(ItemMeta meta, String buttonKey, String buttonName) {
+        String model = buttonModels.get(buttonKey);
+        applyModel(meta, model, buttonName);
+    }
+
+    private void applyModel(ItemMeta meta, String model, String targetName) {
+        if (model == null || model.isEmpty()) {
+            return;
+        }
+
+        try {
+            String[] parts = model.split(":", 2);
+            if (parts.length != 2) {
+                Bukkit.getLogger().warning("Некорректный формат модели для " + targetName + ": " + model);
+                return;
+            }
+
+            NamespacedKey modelKey = new NamespacedKey(parts[0], parts[1]);
+            try {
+                meta.setItemModel(modelKey);
+            } catch (NoSuchMethodError e) {
+                Bukkit.getLogger().warning("Кастомные модели не поддерживаются в этой версии Minecraft");
+            }
+        } catch (Exception e) {
+            Bukkit.getLogger().warning("Ошибка при установке модели для " + targetName + ": " + e.getMessage());
+        }
+    }
+
+    private SGButton createPacksPreviousPageButton(Player player, int newPage) {
+        ItemStack arrow = new ItemStack(Material.ARROW);
+        ItemMeta meta = arrow.getItemMeta();
+        if (meta != null) {
+            meta.setDisplayName(ChatColor.GREEN + "◀ Предыдущая страница");
+            meta.setLore(Arrays.asList(
+                    ChatColor.GRAY + "Нажмите, чтобы перейти",
+                    ChatColor.GRAY + "на предыдущую страницу"
+            ));
+            applyConfiguredButtonModel(meta, "packs-previous-page", "кнопки packs-previous-page");
+            arrow.setItemMeta(meta);
+        }
+
+        return new SGButton(arrow).withListener(ClickLimiter.wrapWithLimit(e -> {
+            e.setCancelled(true);
+            openMainMenu(player, newPage);
+        }));
+    }
+
+    private SGButton createPacksNextPageButton(Player player, int newPage) {
+        ItemStack arrow = new ItemStack(Material.ARROW);
+        ItemMeta meta = arrow.getItemMeta();
+        if (meta != null) {
+            meta.setDisplayName(ChatColor.GREEN + "Следующая страница ▶");
+            meta.setLore(Arrays.asList(
+                    ChatColor.GRAY + "Нажмите, чтобы перейти",
+                    ChatColor.GRAY + "на следующую страницу"
+            ));
+            applyConfiguredButtonModel(meta, "packs-next-page", "кнопки packs-next-page");
+            arrow.setItemMeta(meta);
+        }
+
+        return new SGButton(arrow).withListener(ClickLimiter.wrapWithLimit(e -> {
+            e.setCancelled(true);
+            openMainMenu(player, newPage);
+        }));
+    }
+
+    private SGButton createDonateInfoButton(Player player) {
+        ItemStack book = new ItemStack(Material.KNOWLEDGE_BOOK);
+        ItemMeta meta = book.getItemMeta();
+
+        if (meta != null) {
+            meta.setDisplayName(ChatColor.AQUA + "Информация о донат-валюте");
+            meta.setLore(Arrays.asList(
+                    ChatColor.GRAY + "1 нефткоин " + ChatColor.WHITE + "\uE058" + ChatColor.GRAY + " = 1 рубль.",
+                    ChatColor.GRAY + "Пополнить баланс можно на сайте:",
+                    ChatColor.YELLOW + donateUrl,
+                    "",
+                    ChatColor.GRAY + "Кастомные ники видны над головой",
+                    ChatColor.GRAY + "почти на всех режимах",
+                    ChatColor.GRAY + "и выдаются навсегда после покупки.",
+                    "",
+                    ChatColor.GREEN + "Нажмите, чтобы открыть сайт."
+            ));
+            applyConfiguredButtonModel(meta, "donate-info", "кнопки donate-info");
+            book.setItemMeta(meta);
+        }
+
+        return new SGButton(book).withListener(ClickLimiter.wrapWithLimit(e -> {
+            e.setCancelled(true);
+            player.closeInventory();
+
+            TextComponent link = new TextComponent(ChatColor.GREEN + "Открыть страницу доната");
+            link.setClickEvent(new ClickEvent(ClickEvent.Action.OPEN_URL, donateUrl));
+
+            player.spigot().sendMessage(link);
         }));
     }
 
@@ -209,6 +413,7 @@ public class NameplateMenu {
             lore.add(ChatColor.YELLOW + "Включит предпросмотр ника");
 
             meta.setLore(lore);
+            applyConfiguredButtonModel(meta, "preview-current", "кнопки preview-current");
             eye.setItemMeta(meta);
         }
 
@@ -223,9 +428,10 @@ public class NameplateMenu {
         List<NameplateItem> packItems = packItemsCache.getOrDefault(packName, new ArrayList<>());
         List<NameplateItem> visibleItems = getVisibleItemsForPack(packItems, player);
 
-        if (visibleItems.isEmpty()) {
+        boolean uniquePack = uniqueOrderService.isEnabled() && packName.equalsIgnoreCase(uniqueOrderService.getPackName());
+        if (visibleItems.isEmpty() && !uniquePack) {
             player.sendMessage(ChatColor.YELLOW + "В этом пакете нет доступных ников!");
-            openMainMenu(player);
+            openMainMenu(player, playerPackMenuPages.getOrDefault(player.getUniqueId(), 0));
             return;
         }
 
@@ -238,7 +444,7 @@ public class NameplateMenu {
             return Double.compare(a.getPrice(), b.getPrice());
         });
 
-        int itemsPerPage = ITEM_SLOTS.length;
+        int itemsPerPage = itemSlots.length;
         int totalPages = (int) Math.ceil((double) visibleItems.size() / itemsPerPage);
 
         if (page < 0) page = 0;
@@ -246,8 +452,12 @@ public class NameplateMenu {
         if (totalPages == 0) page = 0;
 
         playerPages.put(player.getUniqueId(), page);
-        String title = "§8Пакет: " + packName + " §7(§f" + (page + 1) + "/" + totalPages + "§7)";
-        SGMenu menu = spiGUI.create(title, menuRows);
+        String title = nameplatesMenuTitle
+                .replace("{pack}", packName)
+                .replace("{currentPage}", String.valueOf(page + 1))
+                .replace("{totalPages}", String.valueOf(totalPages));
+        title = ChatColor.translateAlternateColorCodes('&', title);
+        SGMenu menu = spiGUI.create(title, nameplatesMenuRows);
 
         int startIndex = page * itemsPerPage;
         int endIndex = Math.min(startIndex + itemsPerPage, visibleItems.size());
@@ -255,26 +465,55 @@ public class NameplateMenu {
         for (int i = startIndex; i < endIndex; i++) {
             NameplateItem item = visibleItems.get(i);
             int slotIndex = i - startIndex;
-            if (slotIndex < ITEM_SLOTS.length) {
-                menu.setButton(ITEM_SLOTS[slotIndex], createItemButton(item, player));
+            if (slotIndex < itemSlots.length) {
+                menu.setButton(itemSlots[slotIndex], createItemButton(item, player));
             }
         }
 
-        menu.setButton(BACK_BUTTON_SLOT, createBackButton(player));
+        menu.setButton(nameplatesMenuBackSlot, createBackButton(player));
+        if (uniqueOrderService.isEnabled() && packName.equalsIgnoreCase(uniqueOrderService.getPackName())) {
+            menu.setButton(uniqueOrderService.getButtonSlot(), createUniqueOrderButton(player));
+        }
         if (hasAnyPurchasedItem(player, packItems)) {
-            menu.setButton(EQUIP_ALL_BUTTON_SLOT, createUnequipButton(player));
+            menu.setButton(nameplatesMenuUnequipSlot, createUnequipButton(player));
         }
 
         if (totalPages > 1) {
             if (page > 0) {
-                menu.setButton(PREVIOUS_PAGE_SLOT, createPreviousPageButton(player, page - 1, packName));
+                menu.setButton(nameplatesMenuPreviousSlot, createPreviousPageButton(player, page - 1, packName));
             }
             if (page < totalPages - 1) {
-                menu.setButton(NEXT_PAGE_SLOT, createNextPageButton(player, page + 1, packName));
+                menu.setButton(nameplatesMenuNextSlot, createNextPageButton(player, page + 1, packName));
             }
         }
 
         player.openInventory(menu.getInventory());
+    }
+
+
+    private SGButton createUniqueOrderButton(Player player) {
+        ItemStack stack = new ItemStack(Material.NETHER_STAR);
+        ItemMeta meta = stack.getItemMeta();
+
+        if (meta != null) {
+            meta.setDisplayName(ColorUtil.colorize(uniqueOrderService.getButtonName()));
+            List<String> lore = uniqueOrderService.getButtonLore().stream()
+                    .map(ColorUtil::colorize)
+                    .collect(Collectors.toCollection(ArrayList::new));
+            lore.add(" ");
+            lore.add(ColorUtil.colorize("&eЛКМ - Оформить заказ"));
+            meta.setLore(lore);
+            stack.setItemMeta(meta);
+        }
+
+        return new SGButton(stack).withListener(ClickLimiter.wrapWithLimit(e -> {
+            e.setCancelled(true);
+            player.closeInventory();
+            for (String line : uniqueOrderService.getWarningMessages()) {
+                player.sendMessage(ColorUtil.colorize(line));
+            }
+            ConfirmationBuilder.sendUniqueOrderPurchase(player, actions, 30);
+        }));
     }
 
     private SGButton createBackButton(Player player) {
@@ -286,12 +525,13 @@ public class NameplateMenu {
                     ChatColor.GRAY + "Нажмите, чтобы вернуться",
                     ChatColor.GRAY + "к выбору пакетов"
             ));
+            applyConfiguredButtonModel(meta, "back", "кнопки back");
             arrow.setItemMeta(meta);
         }
 
         return new SGButton(arrow).withListener(ClickLimiter.wrapWithLimit(e -> {
             e.setCancelled(true);
-            openMainMenu(player);
+            openMainMenu(player, playerPackMenuPages.getOrDefault(player.getUniqueId(), 0));
         }));
     }
 
@@ -304,6 +544,7 @@ public class NameplateMenu {
                     ChatColor.GRAY + "Нажмите, чтобы перейти",
                     ChatColor.GRAY + "на предыдущую страницу"
             ));
+            applyConfiguredButtonModel(meta, "previous-page", "кнопки previous-page");
             arrow.setItemMeta(meta);
         }
 
@@ -322,6 +563,7 @@ public class NameplateMenu {
                     ChatColor.GRAY + "Нажмите, чтобы перейти",
                     ChatColor.GRAY + "на следующую страницу"
             ));
+            applyConfiguredButtonModel(meta, "next-page", "кнопки next-page");
             arrow.setItemMeta(meta);
         }
 
@@ -342,6 +584,7 @@ public class NameplateMenu {
                     "",
                     ChatColor.YELLOW + "Удалит эффекты текущего ника"
             ));
+            applyConfiguredButtonModel(meta, "unequip", "кнопки unequip");
             barrier.setItemMeta(meta);
         }
 
@@ -366,6 +609,21 @@ public class NameplateMenu {
         }
 
         return visible;
+    }
+
+    private boolean packHasVisibleItemsForPlayer(Player player, List<NameplateItem> packItems) {
+        for (NameplateItem item : packItems) {
+            if (item.isHiddenInShop()) {
+                if (item.hasPermission() && hasPurchasedItem(player, item)) {
+                    return true;
+                }
+                continue;
+            }
+
+            return true;
+        }
+
+        return false;
     }
 
     private boolean itemIsPurchased(Player player, NameplateItem item) {
