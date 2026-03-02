@@ -19,6 +19,7 @@ commands:
       /anp shop - открыть магазин покупки
       /anp my - открыть список купленных табличек
       /anp admin - меню заказов уникальных ников (админ)
+      /anp messages - меню сообщений входа/выхода
 
 permissions:
   akatnameplates.use:

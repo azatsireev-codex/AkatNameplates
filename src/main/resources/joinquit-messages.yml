@@ -1,0 +1,36 @@
+menu:
+  title: "&8Сообщения входа/выхода"
+  rows: 6
+  slots: [10, 11, 12, 13, 14, 15, 16, 19, 20, 21, 22, 23, 24, 25, 28, 29, 30, 31, 32, 33, 34]
+
+messages:
+  default_plus:
+    permission: "joinquit.message.default_plus"
+    neft-price: 100
+    points-price: 100
+    icon: "PAPER"
+    join: "<gradient:#55ff55:#00aa00>+ {player}</gradient>"
+    quit: "<gradient:#ff5555:#aa0000>- {player}</gradient>"
+
+  royal:
+    permission: "joinquit.message.royal"
+    neft-price: 500
+    points-price: 500
+    icon: "BOOK"
+    join: "#ffd700✦ &f{player} &7воссиял на сервере"
+    quit: "#ffd700✦ &f{player} &7покинул королевство"
+
+database:
+  # mariadb | sqlite
+  type: "mariadb"
+
+  # Настройки MariaDB (используются когда type: mariadb)
+  host: "127.0.0.1"
+  port: 3306
+  name: "nameplates"
+  user: "root"
+  password: "change-me"
+
+  # Настройки SQLite (используются когда type: sqlite)
+  sqlite:
+    file: "joinquit-messages.db"

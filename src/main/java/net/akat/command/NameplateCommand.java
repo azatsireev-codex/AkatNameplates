@@ -1,7 +1,9 @@
 package net.akat.command;
 
 import net.akat.api.spigui.SpiGUI;
+import net.akat.joinquit.JoinQuitMessageService;
 import net.akat.manager.NameplateManager;
+import net.akat.menu.JoinQuitMessageMenu;
 import net.akat.menu.NameplateMenu;
 import net.akat.menu.UniqueOrderAdminMenu;
 import net.akat.service.NameplateActions;
@@ -25,18 +27,24 @@ public class NameplateCommand implements CommandExecutor, TabCompleter {
     private final NameplateActions actions;
     private final UniqueOrderService uniqueOrderService;
     private final UniqueOrderAdminMenu uniqueOrderAdminMenu;
+    private final JoinQuitMessageService joinQuitMessageService;
+    private final JoinQuitMessageMenu joinQuitMessageMenu;
 
     public NameplateCommand(NameplateManager manager, NameplateMenu purchaseMenu,
                             SpiGUI spiGUI,
                             NameplateActions actions,
                             UniqueOrderService uniqueOrderService,
-                            UniqueOrderAdminMenu uniqueOrderAdminMenu) {
+                            UniqueOrderAdminMenu uniqueOrderAdminMenu,
+                            JoinQuitMessageService joinQuitMessageService,
+                            JoinQuitMessageMenu joinQuitMessageMenu) {
         this.manager = manager;
         this.purchaseMenu = purchaseMenu;
         this.spiGUI = spiGUI;
         this.actions = actions;
         this.uniqueOrderService = uniqueOrderService;
         this.uniqueOrderAdminMenu = uniqueOrderAdminMenu;
+        this.joinQuitMessageService = joinQuitMessageService;
+        this.joinQuitMessageMenu = joinQuitMessageMenu;
     }
 
     @Override
@@ -53,7 +61,7 @@ public class NameplateCommand implements CommandExecutor, TabCompleter {
                 purchaseMenu.open((Player) sender);
                 return true;
             } else {
-                sender.sendMessage(ChatColor.RED + "Использование: /" + label + " <shop|my|admin> [игрок]");
+                sender.sendMessage(ChatColor.RED + "Использование: /" + label + " <shop|my|admin|messages> [игрок]");
                 sender.sendMessage(ChatColor.RED + "Или: /" + label + " reload");
                 return false;
             }
@@ -71,11 +79,14 @@ public class NameplateCommand implements CommandExecutor, TabCompleter {
             case "admin":
                 return handleUniqueOrdersCommand(sender);
 
+            case "messages":
+                return handleMessagesCommand(sender);
+
             default:
                 // Показываем разный хелп в зависимости от команды
                 String cmd = isShortCommand ? label : "akatnameplates";
                 if (sender.hasPermission("akatnameplates.admin")) {
-                    sender.sendMessage(ChatColor.RED + "Использование: /" + cmd + " <shop|my|admin> [игрок]");
+                    sender.sendMessage(ChatColor.RED + "Использование: /" + cmd + " <shop|my|admin|messages> [игрок]");
                     sender.sendMessage(ChatColor.RED + "Или: /" + cmd + " reload");
                 } else {
                     sender.sendMessage(ChatColor.RED + "Использование: /" + cmd + " [shop|my]");
@@ -131,6 +142,7 @@ public class NameplateCommand implements CommandExecutor, TabCompleter {
 
         if (manager.reloadConfig()) {
             uniqueOrderService.reload();
+            joinQuitMessageService.reload();
 
             purchaseMenu = new NameplateMenu(
                     spiGUI,
@@ -181,12 +193,28 @@ public class NameplateCommand implements CommandExecutor, TabCompleter {
         return true;
     }
 
+
+    private boolean handleMessagesCommand(CommandSender sender) {
+        if (!(sender instanceof Player player)) {
+            sender.sendMessage(ChatColor.RED + "Команда доступна только игрокам.");
+            return true;
+        }
+
+        if (!sender.hasPermission("akatnameplates.use")) {
+            sender.sendMessage(ChatColor.RED + "У вас нет прав на эту команду!");
+            return true;
+        }
+
+        joinQuitMessageMenu.open(player);
+        return true;
+    }
+
     @Override
     public List<String> onTabComplete(CommandSender sender, Command command, String alias, String[] args) {
         List<String> completions = new ArrayList<>();
 
         if (args.length == 1) {
-            List<String> allCommands = Arrays.asList("shop", "my", "reload", "admin");
+            List<String> allCommands = Arrays.asList("shop", "my", "reload", "admin", "messages");
 
             for (String cmd : allCommands) {
                 if (cmd.startsWith(args[0].toLowerCase())) {
@@ -230,6 +258,9 @@ public class NameplateCommand implements CommandExecutor, TabCompleter {
 
             case "admin":
                 return sender.hasPermission("akatnameplates.uniqueorders") || sender.hasPermission("akatnameplates.admin");
+
+            case "messages":
+                return sender.hasPermission("akatnameplates.use");
 
             default:
                 return false;
